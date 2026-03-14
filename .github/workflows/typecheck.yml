@@ -1,0 +1,25 @@
+name: Typecheck
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install root dependencies
+        run: bun install
+
+      - name: Typecheck Remotion
+        run: bunx tsc --noEmit
+
+      - name: Install server dependencies
+        run: cd server && bun install
+
+      - name: Typecheck server
+        run: cd server && bunx tsc --noEmit -p tsconfig.json
