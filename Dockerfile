@@ -48,7 +48,7 @@ RUN cd server && bun install --frozen-lockfile
 COPY . .
 
 # Create runtime directories (volumes will mount over these, but they need to exist)
-RUN mkdir -p /app/uploads /app/public /app/out /app/tmp /app/whisper.cpp
+RUN mkdir -p /app/uploads /app/public /app/out /app/tmp /app/whisper-vol
 
 EXPOSE 3030
 

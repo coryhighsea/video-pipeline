@@ -31,7 +31,7 @@ services:
       - pipeline-public:/app/public
       - pipeline-out:/app/out
       - pipeline-tmp:/app/tmp
-      - pipeline-whisper:/app/whisper.cpp
+      - pipeline-whisper:/app/whisper-vol
 
 volumes:
   pipeline-db:
