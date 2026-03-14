@@ -15,6 +15,27 @@
       "when": 1772983440705,
       "tag": "0001_classy_cerebro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773000000000,
+      "tag": "0002_custom_context",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773100000000,
+      "tag": "0003_removed_intervals",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773200000000,
+      "tag": "0004_longform",
+      "breakpoints": true
     }
   ]
 }
