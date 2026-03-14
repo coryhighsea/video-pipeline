@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: videos_pipeline
+      POSTGRES_USER: pipeline
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pipeline-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pipeline -d videos_pipeline"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3030:3030"
+    environment:
+      PIPELINE_DATABASE_URL: postgres://pipeline:${POSTGRES_PASSWORD}@postgres:5432/videos_pipeline
+      XAI_API_KEY: ${XAI_API_KEY}
+      REMOTION_CHROME_EXECUTABLE: /usr/bin/chromium
+    volumes:
+      - pipeline-uploads:/app/uploads
+      - pipeline-public:/app/public
+      - pipeline-out:/app/out
+      - pipeline-tmp:/app/tmp
+      - pipeline-whisper:/app/whisper.cpp
+
+volumes:
+  pipeline-db:
+  pipeline-uploads:
+  pipeline-public:
+  pipeline-out:
+  pipeline-tmp:
+  pipeline-whisper:

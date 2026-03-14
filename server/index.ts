@@ -38,6 +38,9 @@ app.get("/out/:filepath{.+}", (c) => {
   return new Response(file);
 });
 
+// Health check
+app.get("/api/health", (c) => c.json({ ok: true }));
+
 // Serve the single-page UI
 const UI_PATH = path.join(import.meta.dir, "ui", "index.html");
 app.get("/", (c) => {

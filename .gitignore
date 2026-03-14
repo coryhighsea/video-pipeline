@@ -26,7 +26,6 @@ uploads/
 tmp/
 server/node_modules/
 server/.env
-server/migrations/
 
 # Uploaded videos copied to public/ for Remotion staticFile()
 public/*.mp4

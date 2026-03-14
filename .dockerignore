@@ -1,0 +1,25 @@
+node_modules/
+server/node_modules/
+
+# Secrets
+.env
+server/.env
+
+# Runtime data — these are volumes, not part of the image
+out/
+uploads/
+tmp/
+whisper.cpp/
+
+# Generated pipeline files
+public/*.mp4
+public/*.json
+public/gap-edited-*.mp4
+public/captions-*.json
+
+# Remotion-specific source videos (large, gitignored)
+public/shorts/
+
+# Dev artifacts
+.DS_Store
+*.db
