@@ -1,10 +1,9 @@
 {
-  "name": "videos",
+  "name": "video-shorts-pipeline",
   "version": "1.0.0",
-  "description": "My Remotion video",
+  "description": "Turn Google Meet recordings into edited, captioned short-form videos using Grok, Whisper, ffmpeg, and Remotion",
   "repository": {},
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
   "dependencies": {
     "@remotion/captions": "4.0.422",
     "@remotion/cli": "4.0.422",
