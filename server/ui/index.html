@@ -120,7 +120,11 @@
     .btn-remove-seg:hover { color: #f87171; border-color: #7f1d1d; }
 
     .clip-rationale { font-size: 12px; color: #555; margin-top: 8px; line-height: 1.4; }
-    .output-link { font-size: 11px; color: #4ade80; margin-top: 6px; word-break: break-all; }
+    .output-link { font-size: 11px; color: #4ade80; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+    .output-link a { color: #4ade80; text-decoration: none; }
+    .output-link a:hover { text-decoration: underline; }
+    .btn-download { background: #14532d; color: #4ade80; border: 1px solid #166534; border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .btn-download:hover { background: #166534; }
     .clip-error { font-size: 11px; color: #f87171; margin-top: 6px; }
     .clip-rendering { font-size: 12px; color: #60a5fa; margin-top: 4px; }
 
@@ -169,7 +173,6 @@
 <body>
   <header>
     <h1>Video Shorts Pipeline</h1>
-    <span class="version">NIS2 · Internal Tool</span>
   </header>
 
   <div class="main">
@@ -616,7 +619,10 @@
           </div>
           ${bodyHtml}
           ${clip.rationale ? `<div class="clip-rationale">${escHtml(clip.rationale)}</div>` : ""}
-          ${clip.outputPath ? `<div class="output-link">→ ${escHtml(clip.outputPath)}</div>` : ""}
+          ${clip.outputPath ? `<div class="output-link">
+            <a class="btn-download" href="/${escHtml(clip.outputPath)}" download>↓ Download</a>
+            <a href="/${escHtml(clip.outputPath)}" target="_blank">${escHtml(clip.outputPath.split("/").pop())}</a>
+          </div>` : ""}
           ${clip.errorMessage ? `<div class="clip-error">Error: ${escHtml(clip.errorMessage)}</div>` : ""}
         </div>
       `;
