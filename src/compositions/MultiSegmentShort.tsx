@@ -15,12 +15,14 @@ export type MultiSegmentShortProps = {
   videoSrc: string;
   captionsFile: string; // already remapped to new timeline
   segments: Array<{ startMs: number; endMs: number }>;
+  showBranding?: boolean;
 };
 
 export const MultiSegmentShort: React.FC<MultiSegmentShortProps> = ({
   videoSrc,
   captionsFile,
   segments,
+  showBranding = true,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -56,10 +58,12 @@ export const MultiSegmentShort: React.FC<MultiSegmentShortProps> = ({
         endOffsetMs={cumulativeFrames / fps * 1000}
         bottomPadding={240}
       />
-      <LogoWatermark />
-      <Sequence from={cumulativeFrames} durationInFrames={OUTRO_FRAMES} layout="none">
-        <OutroCard />
-      </Sequence>
+      {showBranding && <LogoWatermark />}
+      {showBranding && (
+        <Sequence from={cumulativeFrames} durationInFrames={OUTRO_FRAMES} layout="none">
+          <OutroCard />
+        </Sequence>
+      )}
     </AbsoluteFill>
   );
 };

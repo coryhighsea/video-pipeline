@@ -1,8 +1,8 @@
-ALTER TABLE jobs ADD COLUMN mode text NOT NULL DEFAULT 'daily';
-ALTER TABLE jobs ADD COLUMN edited_video_path text;
-ALTER TABLE jobs ADD COLUMN edited_captions_path text;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS mode text NOT NULL DEFAULT 'daily';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS edited_video_path text;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS edited_captions_path text;
 
-CREATE TABLE sections (
+CREATE TABLE IF NOT EXISTS sections (
   id text PRIMARY KEY,
   job_id text NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),

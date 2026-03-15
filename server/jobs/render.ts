@@ -85,7 +85,7 @@ function resolveOutputPath(outputDir: string, slug: string): { absPath: string; 
   return { absPath: path.join(outputDir, `${slug}-v${v}.mp4`), relPath: `${slug}-v${v}.mp4` };
 }
 
-export async function renderClip(jobId: string, clipId: string): Promise<void> {
+export async function renderClip(jobId: string, clipId: string, showBranding = true): Promise<void> {
   const [clip] = await db.select().from(clips).where(eq(clips.id, clipId));
   if (!clip) throw new Error(`Clip ${clipId} not found`);
 
@@ -133,6 +133,7 @@ export async function renderClip(jobId: string, clipId: string): Promise<void> {
       videoSrc: gapEditedFilename,
       captionsFile: captionsFilename,
       segments: remotionSegments,
+      showBranding,
     });
 
     const totalDurationMs = remotionSegments.reduce((acc, s) => acc + (s.endMs - s.startMs), 0);
@@ -334,7 +335,7 @@ export async function renderApprovedClips(jobId: string): Promise<number> {
   emitJobEvent(jobId, { type: "status", status: "rendering", message: `Rendering ${approvedClips.length} clip(s)...` });
 
   for (const clip of approvedClips) {
-    await renderClip(jobId, clip.id);
+    await renderClip(jobId, clip.id, job.showBranding !== false);
   }
 
   console.log(`[render] All clips done for job ${jobId}`);

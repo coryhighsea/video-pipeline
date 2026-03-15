@@ -51,6 +51,7 @@ export const jobs = pgTable("jobs", {
   errorMessage: text("error_message"),
 
   outputDateDir: text("output_date_dir"),
+  showBranding: boolean("show_branding").notNull().default(true),
 });
 
 export const clips = pgTable("clips", {

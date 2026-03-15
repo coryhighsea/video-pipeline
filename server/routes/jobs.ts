@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 import { db } from "../db";
 import { jobs, clips, sections } from "../schema";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, inArray } from "drizzle-orm";
 import { jobEvents, type PipelineEvent, enqueueTranscription } from "../jobs/queue";
 import { runAnalysis } from "../jobs/analyze";
 import { renderApprovedClips, renderLongform } from "../jobs/render";
@@ -26,8 +26,15 @@ async function getJobWithClips(jobId: string) {
   return { ...job, clips: jobClips, sections: jobSections };
 }
 
-// List all jobs (without clips for brevity)
+// List all jobs (without clips for brevity). Pass ?ids=id1,id2 to filter.
 app.get("/", async (c) => {
+  const idsParam = c.req.query("ids");
+  if (idsParam) {
+    const ids = idsParam.split(",").filter(Boolean);
+    if (ids.length === 0) return c.json([]);
+    const allJobs = await db.select().from(jobs).where(inArray(jobs.id, ids)).orderBy(desc(jobs.createdAt));
+    return c.json(allJobs);
+  }
   const allJobs = await db.select().from(jobs).orderBy(desc(jobs.createdAt));
   return c.json(allJobs);
 });
@@ -162,6 +169,14 @@ app.post("/:id/render", async (c) => {
   const jobId = c.req.param("id");
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
   if (!job) return c.json({ error: "Not found" }, 404);
+
+  let body: { showBranding?: boolean } = {};
+  try { body = await c.req.json(); } catch { /* no body is fine */ }
+
+  if (body.showBranding !== undefined) {
+    await db.update(jobs).set({ showBranding: body.showBranding, updatedAt: new Date() }).where(eq(jobs.id, jobId));
+  }
+
   if (job.mode === "longform") {
     enqueueTranscription(() => renderLongform(jobId).then(() => {}));
   } else {

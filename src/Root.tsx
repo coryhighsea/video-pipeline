@@ -684,7 +684,7 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={({ props }) => ({
           durationInFrames: Math.round(
             props.segments.reduce((acc, s) => acc + (s.endMs - s.startMs), 0) / 1000 * FPS
-          ) + 90, // +90 frames for OutroCard
+          ) + (props.showBranding !== false ? 90 : 0),
         })}
         fps={FPS}
         width={1080}
@@ -694,6 +694,7 @@ export const RemotionRoot: React.FC = () => {
             videoSrc: "",
             captionsFile: "",
             segments: [{ startMs: 0, endMs: 30000 }],
+            showBranding: true,
           } satisfies MultiSegmentShortProps
         }
       />

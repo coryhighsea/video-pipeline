@@ -8,9 +8,19 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
 
-    header { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 16px; font-weight: 600; color: #fff; }
-    header .version { font-size: 11px; color: #666; }
+    header { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    header h1 { font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; user-select: none; }
+    header h1:hover { color: #60a5fa; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .branding-label { font-size: 11px; color: #666; }
+
+    /* Toggle switch */
+    .toggle { position: relative; display: inline-block; width: 30px; height: 17px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #333; border-radius: 9px; transition: .2s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 13px; height: 13px; left: 2px; bottom: 2px; background: #666; border-radius: 50%; transition: .2s; }
+    .toggle input:checked + .toggle-slider { background: #1d4ed8; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(13px); background: #fff; }
 
     .main { display: flex; flex: 1; overflow: hidden; }
 
@@ -22,7 +32,7 @@
     .job-item:hover { background: #1e1e1e; }
     .job-item.active { background: #1e3a5f; border-left: 2px solid #3b82f6; }
     .job-item .job-name { font-size: 13px; color: #d0d0d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .job-item .job-meta { font-size: 11px; color: #555; margin-top: 2px; display: flex; gap: 8px; }
+    .job-item .job-meta { font-size: 11px; color: #555; margin-top: 2px; display: flex; gap: 8px; align-items: center; }
 
     .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
     .badge-uploading, .badge-analyzing { background: #1a3a5c; color: #60a5fa; }
@@ -34,7 +44,7 @@
     .badge-stage1_approved { background: #1e3a1e; color: #86efac; }
     .badge-rejected { background: #2a2a2a; color: #555; }
 
-    .btn-delete-job { background: none; border: none; color: #3a3a3a; cursor: pointer; font-size: 11px; padding: 0 2px; line-height: 1; margin-left: auto; }
+    .btn-delete-job { background: none; border: none; color: #3a3a3a; cursor: pointer; font-size: 11px; padding: 0 2px; line-height: 1; margin-left: auto; flex-shrink: 0; }
     .btn-delete-job:hover { color: #f87171; }
 
     /* Upload zone */
@@ -181,13 +191,20 @@
 </head>
 <body>
   <header>
-    <h1>Video Shorts Pipeline</h1>
+    <h1 onclick="showHome()" title="Home">Video Shorts Pipeline</h1>
+    <div class="header-right">
+      <span class="branding-label">Branding</span>
+      <label class="toggle" title="Toggle logo watermark and outro card on rendered videos">
+        <input type="checkbox" id="branding-checkbox" onchange="setBranding(this.checked)" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
   </header>
 
   <div class="main">
     <!-- Sidebar: job list + upload -->
     <div class="sidebar">
-      <div class="sidebar-header">Jobs</div>
+      <div class="sidebar-header">My Jobs</div>
       <div class="job-list" id="job-list">
         <div style="padding:16px;font-size:12px;color:#444;">No jobs yet</div>
       </div>
@@ -208,47 +225,6 @@
 
     <!-- Detail panel -->
     <div class="detail" id="detail">
-      <div class="empty-state">
-        <div class="instructions">
-          <h2>How to use</h2>
-
-          <div class="step-group">
-            <h3>Upload</h3>
-            <div class="step">
-              <span class="step-num">1</span>
-              <span class="step-text"><strong>Pick .txt transcript</strong> — the auto-generated notes file from Google Meet. Optional but recommended for better clip timing.</span>
-            </div>
-            <div class="step">
-              <span class="step-num">2</span>
-              <span class="step-text"><strong>Drop or select the .mp4</strong> — upload starts immediately. Analysis begins as soon as the file is received.</span>
-            </div>
-          </div>
-
-          <div class="step-group">
-            <h3>Review</h3>
-            <div class="step">
-              <span class="step-num">3</span>
-              <span class="step-text">Grok suggests 2–5 clips with titles and rationale. <strong>Approve</strong> the ones you want, adjust segment timestamps if needed, then click <strong>Render</strong>.</span>
-            </div>
-            <div class="step">
-              <span class="step-num">4</span>
-              <span class="step-text"><strong>Re-analyze</strong> — update the context field and re-run Grok to get different clip suggestions. New suggestions are added alongside existing ones.</span>
-            </div>
-            <div class="step">
-              <span class="step-num">5</span>
-              <span class="step-text"><strong>Re-edit</strong> — on a rendered clip, reset it back to adjust segments and render again. Previous file is kept as <code>slug-v2.mp4</code>.</span>
-            </div>
-          </div>
-
-          <div class="step-group">
-            <h3>Output</h3>
-            <div class="step">
-              <span class="step-num">6</span>
-              <span class="step-text">Rendered clips appear with a <strong>Download</strong> button.</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -257,6 +233,30 @@
     let sseSource = null;
     let jobs = [];
     let selectedTranscriptFile = null;
+
+    // ── localStorage helpers ──────────────────────────────────────────────────
+
+    const MY_JOB_IDS_KEY = 'pipeline_job_ids';
+    const BRANDING_KEY = 'pipeline_branding';
+
+    function getMyJobIds() {
+      try { return JSON.parse(localStorage.getItem(MY_JOB_IDS_KEY) || '[]'); } catch { return []; }
+    }
+    function addMyJobId(id) {
+      const ids = getMyJobIds();
+      if (!ids.includes(id)) { ids.push(id); localStorage.setItem(MY_JOB_IDS_KEY, JSON.stringify(ids)); }
+    }
+    function removeMyJobId(id) {
+      localStorage.setItem(MY_JOB_IDS_KEY, JSON.stringify(getMyJobIds().filter(i => i !== id)));
+    }
+    function getBranding() {
+      const v = localStorage.getItem(BRANDING_KEY);
+      return v === null ? true : v === 'true';
+    }
+    function setBranding(val) {
+      localStorage.setItem(BRANDING_KEY, val ? 'true' : 'false');
+      document.getElementById('branding-checkbox').checked = val;
+    }
 
     // ── Utilities ──────────────────────────────────────────────────────────
 
@@ -312,6 +312,56 @@
       return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
+    function instructionsHtml() {
+      return `
+        <div class="empty-state">
+          <div class="instructions">
+            <h2>How to use</h2>
+            <div class="step-group">
+              <h3>Upload</h3>
+              <div class="step">
+                <span class="step-num">1</span>
+                <span class="step-text"><strong>Pick .txt transcript</strong> — the auto-generated notes file from Google Meet. Optional but recommended for better clip timing.</span>
+              </div>
+              <div class="step">
+                <span class="step-num">2</span>
+                <span class="step-text"><strong>Drop or select the .mp4</strong> — upload starts immediately. Analysis begins as soon as the file is received.</span>
+              </div>
+            </div>
+            <div class="step-group">
+              <h3>Review</h3>
+              <div class="step">
+                <span class="step-num">3</span>
+                <span class="step-text">Grok suggests 2–5 clips with titles and rationale. <strong>Approve</strong> the ones you want, adjust segment timestamps if needed, then click <strong>Render</strong>.</span>
+              </div>
+              <div class="step">
+                <span class="step-num">4</span>
+                <span class="step-text"><strong>Re-analyze</strong> — update the context field and re-run Grok to get different clip suggestions. New suggestions are added alongside existing ones.</span>
+              </div>
+              <div class="step">
+                <span class="step-num">5</span>
+                <span class="step-text"><strong>Re-edit</strong> — on a rendered clip, reset it back to adjust segments and render again. Previous file is kept as <code>slug-v2.mp4</code>.</span>
+              </div>
+            </div>
+            <div class="step-group">
+              <h3>Output</h3>
+              <div class="step">
+                <span class="step-num">6</span>
+                <span class="step-text">Rendered clips appear with a <strong>Download</strong> button. Toggle <strong>Branding</strong> in the header to include or exclude the logo watermark and outro card.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showHome() {
+      currentJobId = null;
+      if (sseSource) { sseSource.close(); sseSource = null; }
+      renderSidebar();
+      document.getElementById("detail").innerHTML = instructionsHtml();
+    }
+
     // ── API ─────────────────────────────────────────────────────────────────
 
     async function api(method, path, body) {
@@ -323,7 +373,13 @@
     }
 
     async function loadJobs() {
-      jobs = await api("GET", "/jobs");
+      const ids = getMyJobIds();
+      if (ids.length === 0) {
+        jobs = [];
+        renderSidebar();
+        return;
+      }
+      jobs = await api("GET", `/jobs?ids=${ids.join(',')}`);
       renderSidebar();
     }
 
@@ -396,6 +452,7 @@
         return;
       }
 
+      addMyJobId(jobId);
       uploadProgress.textContent = "Upload complete. Analyzing...";
       setTimeout(() => {
         uploadProgress.style.display = "none";
@@ -742,9 +799,9 @@
         alert(err.message.includes("rendering") ? "Cannot delete — a clip is currently rendering. Wait for it to finish first." : `Delete failed: ${err.message}`);
         return;
       }
+      removeMyJobId(jobId);
       if (currentJobId === jobId) {
-        currentJobId = null;
-        document.getElementById("detail").innerHTML = `<div class="empty-state">Select a job or upload a video to get started</div>`;
+        showHome();
       }
       await loadJobs();
     }
@@ -769,7 +826,7 @@
       const btn = e.target;
       btn.disabled = true;
       btn.textContent = "Starting...";
-      await api("POST", `/jobs/${jobId}/render`);
+      await api("POST", `/jobs/${jobId}/render`, { showBranding: getBranding() });
       connectSSE(jobId);
       await loadJobs();
       await loadJob(jobId);
@@ -834,18 +891,17 @@
       const btn = e.target;
       btn.disabled = true;
       btn.textContent = "Starting...";
-      await api("POST", `/jobs/${jobId}/render`);
+      await api("POST", `/jobs/${jobId}/render`, { showBranding: getBranding() });
       connectSSE(jobId);
       await loadJobs();
       await loadJob(jobId);
     }
 
     async function startRenderShorts(jobId, e) {
-      // Reuse same render endpoint — server routes longform shorts via renderApprovedClips
       const btn = e.target;
       btn.disabled = true;
       btn.textContent = "Starting...";
-      await api("POST", `/jobs/${jobId}/render-shorts`);
+      await api("POST", `/jobs/${jobId}/render-shorts`, { showBranding: getBranding() });
       connectSSE(jobId);
       await loadJobs();
       await loadJob(jobId);
@@ -853,7 +909,23 @@
 
     // ── Init ──────────────────────────────────────────────────────────────────
 
-    loadJobs();
+    // Restore branding toggle from localStorage
+    document.getElementById('branding-checkbox').checked = getBranding();
+
+    // Show home / instructions immediately
+    document.getElementById("detail").innerHTML = instructionsHtml();
+
+    // Load my jobs and reconnect SSE for any active ones
+    async function init() {
+      await loadJobs();
+      const activeJob = jobs.find(j => !["done", "error", "stage1_review"].includes(j.status));
+      if (activeJob) {
+        selectJob(activeJob.id);
+      }
+    }
+    init();
+
+    // Sidebar polling
     setInterval(loadJobs, 5000);
   </script>
 </body>
