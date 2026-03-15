@@ -53,7 +53,7 @@ export async function transcribeFullVideo(
     console.log(`[transcribe] Chunk ${i + 1}/${chunks.length}: ${Math.round(chunk.startMs / 60000)}min – ${Math.round(chunk.endMs / 60000)}min`);
 
     execSync(
-      `ffmpeg -i "${absVideoPath}" -ss ${chunk.startMs / 1000} -t ${durationSec} -ar 16000 -ac 1 -c:a pcm_s16le "${wavPath}" -y`,
+      `ffmpeg -threads 0 -i "${absVideoPath}" -ss ${chunk.startMs / 1000} -t ${durationSec} -ar 16000 -ac 1 -c:a pcm_s16le "${wavPath}" -y`,
       { stdio: "pipe" }
     );
 
@@ -134,7 +134,7 @@ export async function transcribeClipSegments(
 
     // Extract just this segment's audio window
     execSync(
-      `ffmpeg -i "${absVideoPath}" -ss ${seg.startMs / 1000} -t ${durationSec} -ar 16000 -ac 1 -c:a pcm_s16le "${wavPath}" -y`,
+      `ffmpeg -threads 0 -i "${absVideoPath}" -ss ${seg.startMs / 1000} -t ${durationSec} -ar 16000 -ac 1 -c:a pcm_s16le "${wavPath}" -y`,
       { stdio: "pipe" }
     );
 

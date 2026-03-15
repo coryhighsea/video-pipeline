@@ -146,7 +146,7 @@ export async function renderClip(jobId: string, clipId: string, showBranding = t
         "bunx", "remotion", "render", "PipelineMultiClip",
         outputPath,
         "--props", props,
-        "--concurrency", "2",
+        "--concurrency", "4",
       ],
       { cwd: VIDEOS_DIR, stdout: "pipe", stderr: "pipe" }
     );
@@ -260,7 +260,7 @@ export async function renderLongform(jobId: string): Promise<void> {
         "bunx", "remotion", "render", "PipelineLongform",
         outputPath,
         "--props", props,
-        "--concurrency", "2",
+        "--concurrency", "4",
       ],
       { cwd: VIDEOS_DIR, stdout: "pipe", stderr: "pipe" }
     );
