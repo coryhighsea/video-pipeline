@@ -145,7 +145,7 @@ export async function renderClip(jobId: string, clipId: string): Promise<void> {
         "bunx", "remotion", "render", "PipelineMultiClip",
         outputPath,
         "--props", props,
-        "--concurrency", "4",
+        "--concurrency", "2",
       ],
       { cwd: VIDEOS_DIR, stdout: "pipe", stderr: "pipe" }
     );
@@ -259,7 +259,7 @@ export async function renderLongform(jobId: string): Promise<void> {
         "bunx", "remotion", "render", "PipelineLongform",
         outputPath,
         "--props", props,
-        "--concurrency", "4",
+        "--concurrency", "2",
       ],
       { cwd: VIDEOS_DIR, stdout: "pipe", stderr: "pipe" }
     );

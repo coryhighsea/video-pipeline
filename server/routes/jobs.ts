@@ -124,7 +124,20 @@ app.delete("/:id", async (c) => {
   for (const clip of jobClips) {
     if (clip.gapEditedPath) deleteIfExists(path.join(VIDEOS_DIR, clip.gapEditedPath));
     if (clip.clipCaptionsPath) deleteIfExists(path.join(VIDEOS_DIR, clip.clipCaptionsPath));
-    if (clip.outputPath) deleteIfExists(path.join(VIDEOS_DIR, clip.outputPath));
+    if (clip.outputPath) {
+      deleteIfExists(path.join(VIDEOS_DIR, clip.outputPath));
+      // Also delete versioned re-renders (slug-v2.mp4, slug-v3.mp4, etc.) not tracked in outputPath
+      if (clip.slug) {
+        const outputDir = path.dirname(path.join(VIDEOS_DIR, clip.outputPath));
+        if (fs.existsSync(outputDir)) {
+          for (const file of fs.readdirSync(outputDir)) {
+            if (file.startsWith(clip.slug) && file.endsWith(".mp4")) {
+              deleteIfExists(path.join(outputDir, file));
+            }
+          }
+        }
+      }
+    }
   }
 
   // Delete job-level files: uploaded video + transcript + public copy
