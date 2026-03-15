@@ -1,6 +1,6 @@
 # Video Shorts Pipeline
 
-Turn Google Meet recordings into edited, captioned short-form videos. Upload a recording and its auto-generated transcript, review AI-suggested clips, and export polished mp4s — automatically transcribed, LLM-edited, and captioned.
+Turn Google Meet recordings into edited, captioned short-form videos. Upload a recording and its auto-generated transcript, review AI-suggested clips, and export polished mp4s — automatically transcribed, LLM-edited, and captioned. Try it live at stack-crate.com
 
 **Stack:** Bun · Hono · PostgreSQL · Drizzle · xAI Grok · whisper.cpp · ffmpeg · Remotion · Tailwind
 
