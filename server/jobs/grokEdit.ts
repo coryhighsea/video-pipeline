@@ -168,7 +168,7 @@ Return the intervals to remove.`,
   const outputPath = path.join(PUBLIC_DIR, outputFilename);
 
   execSync(
-    `ffmpeg -i "${absInputPath}" -filter_complex "${filterComplex}" -map "[outv]" -map "[outa]" "${outputPath}" -y`,
+    `ffmpeg -threads 0 -i "${absInputPath}" -filter_complex "${filterComplex}" -map "[outv]" -map "[outa]" -preset fast "${outputPath}" -y`,
     { stdio: "pipe" }
   );
 
@@ -276,7 +276,7 @@ Return only the intervals that genuinely need cutting. When in doubt, leave it i
     const rawConcatInputs = segments.map((_, i) => `[v${i}][a${i}]`).join("");
     const rawFilterComplex = `${rawFilters.join(";")};${rawConcatInputs}concat=n=${segments.length}:v=1:a=1[outv][outa]`;
     execSync(
-      `ffmpeg -i "${absInputPath}" -filter_complex "${rawFilterComplex}" -map "[outv]" -map "[outa]" "${outputPath}" -y`,
+      `ffmpeg -threads 0 -i "${absInputPath}" -filter_complex "${rawFilterComplex}" -map "[outv]" -map "[outa]" -preset fast "${outputPath}" -y`,
       { stdio: "pipe" }
     );
     return { removedIntervals: [], outputFilename };
@@ -297,7 +297,7 @@ Return only the intervals that genuinely need cutting. When in doubt, leave it i
   const outputPath = path.join(PUBLIC_DIR, outputFilename);
 
   execSync(
-    `ffmpeg -i "${absInputPath}" -filter_complex "${filterComplex}" -map "[outv]" -map "[outa]" "${outputPath}" -y`,
+    `ffmpeg -threads 0 -i "${absInputPath}" -filter_complex "${filterComplex}" -map "[outv]" -map "[outa]" -preset fast "${outputPath}" -y`,
     { stdio: "pipe" }
   );
 
