@@ -47,6 +47,10 @@ RUN cd server && bun install --frozen-lockfile
 # Copy source
 COPY . .
 
+# Bake static public/ assets into a separate path so the volume mount at /app/public
+# doesn't hide them. Entrypoint copies them into the volume on every startup.
+RUN cp -r /app/public /app/public-static
+
 # Create runtime directories (volumes will mount over these, but they need to exist)
 RUN mkdir -p /app/uploads /app/public /app/out /app/tmp /app/whisper-vol
 
