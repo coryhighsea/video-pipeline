@@ -42,6 +42,7 @@
     .badge-error { background: #3a1a1a; color: #f87171; }
     .badge-suggested { background: #2a2a2a; color: #9ca3af; }
     .badge-stage1_approved { background: #1e3a1e; color: #86efac; }
+    .badge-queued { background: #1a2a3a; color: #93c5fd; }
     .badge-rejected { background: #2a2a2a; color: #555; }
 
     .btn-delete-job { background: none; border: none; color: #3a3a3a; cursor: pointer; font-size: 11px; padding: 0 2px; line-height: 1; margin-left: auto; flex-shrink: 0; }
@@ -103,6 +104,7 @@
     /* Clip card */
     .clip-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; transition: border-color 0.15s; }
     .clip-card.stage1_approved { border-color: #166534; }
+    .clip-card.queued { border-color: #1d4ed8; opacity: 0.75; }
     .clip-card.rejected { opacity: 0.4; }
     .clip-card.done { border-color: #166534; background: #0f1f0f; }
     .clip-card.rendering { border-color: #1d4ed8; }
@@ -546,7 +548,21 @@
               ? "Waiting for AI analysis..."
               : "No clips yet."
           }</div>`
-        : allClips.map(c => renderClipCard(c)).join("");
+        : allClips.map(c => renderClipCard(c, job)).join("");
+
+      const isRendering = job.status === "rendering";
+      const renderBar = approvedCount > 0 && !isRendering ? `
+        <div class="action-bar">
+          <button class="btn-render" onclick="startRender('${job.id}', event)">
+            Render ${approvedCount} Clip${approvedCount !== 1 ? "s" : ""} →
+          </button>
+          <span class="action-count">Whisper · gap-edit · captions · render</span>
+        </div>
+      ` : isRendering ? `
+        <div class="action-bar">
+          <span class="action-count" style="color:#60a5fa;">⏳ Rendering in progress — approved clips are queued</span>
+        </div>
+      ` : "";
 
       detail.innerHTML = `
         <div class="status-bar">
@@ -568,14 +584,7 @@
         <div class="section-label">Clips</div>
         <div class="clips-list" id="clips-list">${clipsHtml}</div>
 
-        ${approvedCount > 0 ? `
-          <div class="action-bar">
-            <button class="btn-render" onclick="startRender('${job.id}', event)">
-              Render ${approvedCount} Clip${approvedCount !== 1 ? "s" : ""} →
-            </button>
-            <span class="action-count">Whisper · gap-edit · captions · render</span>
-          </div>
-        ` : ""}
+        ${renderBar}
 
         <details class="log-section">
           <summary>Log output</summary>
@@ -599,7 +608,7 @@
         ? `<div style="color:#444;font-size:13px;padding:8px 0;">${
             ["analyzing", "uploading"].includes(job.status) ? "Analyzing..." : "No shorts yet."
           }</div>`
-        : allClips.map(c => renderClipCard(c)).join("");
+        : allClips.map(c => renderClipCard(c, job)).join("");
 
       const isRenderable = job.status === "stage1_review" || job.status === "done";
 
@@ -650,14 +659,23 @@
       `;
     }
 
-    function renderClipCard(clip) {
-      const isEditable = ["suggested", "stage1_approved"].includes(clip.status);
+    function renderClipCard(clip, job = {}) {
+      const isQueued = (job.status === "rendering") && clip.status === "stage1_approved";
+      const isEditable = !isQueued && ["suggested", "stage1_approved"].includes(clip.status);
       const isRendering = clip.status === "rendering";
 
       let bodyHtml = "";
 
       if (isRendering) {
         bodyHtml = `<div class="clip-rendering">Processing... Whisper + gap-edit + rendering</div>`;
+      } else if (isQueued) {
+        const segs = clip.segments || [];
+        bodyHtml = `
+          <div style="margin-bottom:4px;">
+            <div class="segments-label">${segs.length} segment${segs.length !== 1 ? "s" : ""} · ${totalSegDur(segs)}</div>
+            <div class="clip-rendering" style="color:#93c5fd;">⏳ Queued — waiting for current clip to finish</div>
+          </div>
+        `;
       } else {
         // Segment editor (shown for suggested, approved, error)
         const segs = clip.segments || [];
@@ -694,7 +712,9 @@
       }
 
       let actionBtns = "";
-      if (clip.status === "suggested") {
+      if (isQueued) {
+        actionBtns = "";
+      } else if (clip.status === "suggested") {
         actionBtns = `
           <button class="btn btn-approve btn-sm" onclick="approveClip('${clip.id}')">Approve</button>
           <button class="btn btn-reject btn-sm" onclick="rejectClip('${clip.id}')">✗</button>
@@ -710,17 +730,20 @@
         `;
       }
 
+      const cardClass = isQueued ? "queued" : clip.status;
+      const badgeLabel = isQueued ? "queued" : clip.status.replace(/_/g," ");
+
       return `
-        <div class="clip-card ${clip.status}" id="clip-${clip.id}">
+        <div class="clip-card ${cardClass}" id="clip-${clip.id}">
           <div class="clip-header">
             <input class="clip-title-input" value="${escHtml(clip.title)}"
               onblur="updateClipTitle('${clip.id}', this.value)"
               onkeydown="if(event.key==='Enter')this.blur()"
-              ${!isEditable ? "disabled" : ""}
+              ${(!isEditable || isQueued) ? "disabled" : ""}
             />
             <div class="clip-actions">
               ${actionBtns}
-              <span class="badge badge-${clip.status}">${clip.status.replace(/_/g," ")}</span>
+              <span class="badge badge-${cardClass}">${badgeLabel}</span>
             </div>
           </div>
           ${bodyHtml}

@@ -42,6 +42,7 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
             key={token.fromMs}
             style={{
               color: isActive ? HIGHLIGHT_COLOR : "white",
+              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
               fontSize: 46,
               fontWeight: 700,
               whiteSpace: "pre",
