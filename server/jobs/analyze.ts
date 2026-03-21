@@ -31,7 +31,7 @@ const ClipSuggestionSchema = z.object({
           .min(1)
           .max(4)
           .describe("1-4 time ranges to stitch together with hard cuts. Use multiple segments to combine a topic mentioned early and revisited later, or to skip dead air between two good moments."),
-        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 30 and 90."),
+        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 10 and 25."),
       })
     )
     .min(2)
@@ -92,7 +92,7 @@ WHAT MAKES A GOOD CLIP:
 - Relatable founder struggles: stress, chaos, small wins
 
 HARD RULES:
-- totalDurationSeconds must be 30–90. It equals the sum of all segment durations, NOT wall-clock end-to-start.
+- totalDurationSeconds must be 10–25. It equals the sum of all segment durations, NOT wall-clock end-to-start.
 - Each segment starts and ends at complete sentence boundaries.
 - The clip must be self-contained — a stranger should understand it with no prior context.
 - Use multiple segments to: stitch a topic mentioned early with its conclusion later, skip logistical filler between two strong moments, combine a question and its answer separated by tangents.
