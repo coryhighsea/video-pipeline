@@ -31,7 +31,7 @@ const ClipSuggestionSchema = z.object({
           .min(1)
           .max(4)
           .describe("1-4 time ranges to stitch together with hard cuts. Use multiple segments to combine a topic mentioned early and revisited later, or to skip dead air between two good moments."),
-        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 10 and 25."),
+        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 10 and 60."),
       })
     )
     .min(2)
