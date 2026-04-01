@@ -184,6 +184,7 @@ export async function grokEditClip(params: {
   rationale: string;
 }): Promise<{ removedIntervals: RemovedInterval[]; outputFilename: string }> {
   const { clipId, absInputPath, segments, captions, title, rationale } = params;
+  const totalSegmentMs = segments.reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
 
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) throw new Error("XAI_API_KEY not set");
@@ -223,6 +224,8 @@ If the clip is already clean, return an empty removals list.
 Return intervals at exact word boundaries. Do not cut mid-word.`,
     prompt: `Clip title: "${title}"
 ${rationale ? `Context: ${rationale}\n` : ""}
+Total clip duration before edits: ${(totalSegmentMs / 1000).toFixed(1)}s. After cuts, the clip should remain at least ${Math.round(totalSegmentMs * 0.75 / 1000)}s — do NOT over-cut.
+
 Word-by-word transcript with timestamps:
 ${wordList}
 Return only the intervals that genuinely need cutting. When in doubt, leave it in.`,
@@ -261,9 +264,12 @@ Return only the intervals that genuinely need cutting. When in doubt, leave it i
     }
   }
 
-  if (keepWindows.length === 0) {
-    // Grok tried to remove everything — skip edits entirely and use raw segments
-    console.warn(`[grokEdit:${clipId.slice(0, 8)}] Grok flagged all content for removal — skipping edit pass, using raw segments`);
+  const keepMs = keepWindows.reduce((sum, w) => sum + (w.endMs - w.startMs), 0);
+  const overCut = keepWindows.length === 0 || keepMs < totalSegmentMs * 0.75;
+
+  if (overCut) {
+    // Grok removed too much (>25%) — skip edits entirely and use raw segments
+    console.warn(`[grokEdit:${clipId.slice(0, 8)}] Grok would remove ${((1 - keepMs / totalSegmentMs) * 100).toFixed(0)}% of clip — skipping edit pass, using raw segments`);
     const outputFilename = `gap-edited-${clipId}.mp4`;
     const outputPath = path.join(PUBLIC_DIR, outputFilename);
     const rawFilters: string[] = [];
@@ -281,6 +287,8 @@ Return only the intervals that genuinely need cutting. When in doubt, leave it i
     );
     return { removedIntervals: [], outputFilename };
   }
+
+  console.log(`[grokEdit:${clipId.slice(0, 8)}] Keeping ${(keepMs / 1000).toFixed(1)}s of ${(totalSegmentMs / 1000).toFixed(1)}s total`);
 
   // ffmpeg filter_complex: trim each keep window + concat
   const filters: string[] = [];

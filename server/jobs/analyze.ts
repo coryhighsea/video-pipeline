@@ -92,7 +92,7 @@ WHAT MAKES A GOOD CLIP:
 - Relatable founder struggles: stress, chaos, small wins
 
 HARD RULES:
-- totalDurationSeconds must be 10–25. It equals the sum of all segment durations, NOT wall-clock end-to-start.
+- totalDurationSeconds must be 30–60. It equals the sum of all segment durations, NOT wall-clock end-to-start.
 - Each segment starts and ends at complete sentence boundaries.
 - The clip must be self-contained — a stranger should understand it with no prior context.
 - Use multiple segments to: stitch a topic mentioned early with its conclusion later, skip logistical filler between two strong moments, combine a question and its answer separated by tangents.
