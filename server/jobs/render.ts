@@ -301,6 +301,7 @@ export async function renderLongform(jobId: string): Promise<void> {
       await db.update(jobs).set({
         status: "done",
         outputDateDir: dateDir,
+        outputPath: `out/${dateDir}/${outputFilename}`,
         updatedAt: new Date(),
       }).where(eq(jobs.id, jobId));
       const msg = `✓ Rendered: out/${dateDir}/${outputFilename}`;
