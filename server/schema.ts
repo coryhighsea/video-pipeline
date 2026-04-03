@@ -51,6 +51,7 @@ export const jobs = pgTable("jobs", {
   errorMessage: text("error_message"),
 
   outputDateDir: text("output_date_dir"),
+  outputPath: text("output_path"),  // longform only: e.g. out/2026-04-02/my-video.mp4
   showBranding: boolean("show_branding").notNull().default(true),
 });
 

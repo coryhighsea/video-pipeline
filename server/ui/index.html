@@ -508,7 +508,7 @@
       sseSource.onmessage = async (e) => {
         const event = JSON.parse(e.data);
         appendLog(event);
-        if (event.type === "status" || event.type === "done") {
+        if (event.type === "status" || event.type === "done" || event.type === "error") {
           await loadJobs();
           if (currentJobId === jobId) await loadJob(jobId);
         }
@@ -610,7 +610,31 @@
           }</div>`
         : allClips.map(c => renderClipCard(c, job)).join("");
 
-      const isRenderable = job.status === "stage1_review" || job.status === "done";
+      const isRendering = job.status === "rendering";
+      const isDone = job.status === "done";
+
+      const longformRenderBar = isDone && job.outputPath ? `
+        <div class="longform-render-bar">
+          <a href="/${escHtml(job.outputPath)}" download class="btn-render-longform" style="text-decoration:none;display:inline-block;">
+            ↓ Download 16:9 YouTube
+          </a>
+          <button class="btn-render-longform" style="margin-left:8px;background:#1a1a2e;border-color:#3b3b6b;" onclick="startRenderLongform('${job.id}', event)">
+            Re-render →
+          </button>
+          <span style="font-size:11px;color:#555;">${escHtml(job.outputPath.split('/').pop())}</span>
+        </div>
+      ` : isRendering ? `
+        <div class="longform-render-bar">
+          <span style="font-size:13px;color:#60a5fa;">⏳ Rendering 16:9 video...</span>
+        </div>
+      ` : job.status === "stage1_review" ? `
+        <div class="longform-render-bar">
+          <button class="btn-render-longform" onclick="startRenderLongform('${job.id}', event)">
+            Render 16:9 YouTube →
+          </button>
+          <span style="font-size:11px;color:#555;">Remotion · ${allSections.filter(s => s.included).length} section overlay${allSections.filter(s => s.included).length !== 1 ? "s" : ""} · captions</span>
+        </div>
+      ` : "";
 
       detail.innerHTML = `
         <div class="status-bar">
@@ -630,14 +654,7 @@
         <div class="sections-panel">
           <div class="section-label" style="margin-bottom:10px;">16:9 Sections</div>
           ${sectionsHtml}
-          ${isRenderable ? `
-            <div class="longform-render-bar">
-              <button class="btn-render-longform" onclick="startRenderLongform('${job.id}', event)">
-                Render 16:9 YouTube →
-              </button>
-              <span style="font-size:11px;color:#555;">Remotion · ${allSections.filter(s => s.included).length} section overlay${allSections.filter(s => s.included).length !== 1 ? "s" : ""} · captions</span>
-            </div>
-          ` : ""}
+          ${longformRenderBar}
         </div>
 
         <div class="section-label" style="margin-bottom:10px;">Shorts (9:16)</div>
