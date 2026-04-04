@@ -2,7 +2,7 @@
   "name": "videos-server",
   "private": true,
   "scripts": {
-    "start": "bun run index.ts",
+    "start": "bunx drizzle-kit migrate && bun run index.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
