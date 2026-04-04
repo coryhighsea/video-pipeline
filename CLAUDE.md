@@ -106,6 +106,7 @@ bunx drizzle-kit generate && bunx drizzle-kit migrate
 - **Shorts captions higher** — `bottomPadding={240}` for shorts (clears TikTok/Reels/Shorts UI)
 - **Source videos are gitignored** — `.mp4` in `public/` and `uploads/`, generated captions, gap-edited videos all gitignored
 - **Music** — `public/music.mp3` at `volume={0.08}` in talking-head, `volume={0.7}` in promo
+- **DB migrations require journal update** — when adding a migration SQL file to `server/migrations/`, you MUST also add an entry to `server/migrations/meta/_journal.json`. Drizzle-kit reads the journal to discover migrations; a SQL file without a journal entry will never run on deploy. Copy the pattern of the last entry, increment `idx`, and set a new `when` timestamp.
 
 ---
 
