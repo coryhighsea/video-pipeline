@@ -129,9 +129,13 @@ export async function renderClip(jobId: string, clipId: string, showBranding = t
       remotionSegments = [{ startMs: 0, endMs: totalDurationMs }];
     }
 
+    const captionsAbsPath = path.join(PUBLIC_DIR, captionsFilename);
+    const captionsData = JSON.parse(fs.readFileSync(captionsAbsPath, "utf-8"));
+
     const props = JSON.stringify({
       videoSrc: gapEditedFilename,
       captionsFile: captionsFilename,
+      captionsData,
       segments: remotionSegments,
       showBranding,
     });
@@ -239,9 +243,13 @@ export async function renderLongform(jobId: string): Promise<void> {
 
     const sortedSections = [...includedSections].sort((a, b) => a.sortOrder - b.sortOrder);
 
+    const longformCaptionsAbsPath = path.join(VIDEOS_DIR, job.editedCaptionsPath);
+    const longformCaptionsData = JSON.parse(fs.readFileSync(longformCaptionsAbsPath, "utf-8"));
+
     const props = JSON.stringify({
       videoSrc: path.basename(job.editedVideoPath),
       captionsFile: path.basename(job.editedCaptionsPath),
+      captionsData: longformCaptionsData,
       sections: sortedSections.map((s) => ({
         title: s.title,
         subtitle: s.subtitle ?? undefined,

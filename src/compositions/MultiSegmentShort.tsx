@@ -5,6 +5,7 @@ import {
   staticFile,
   useVideoConfig,
 } from "remotion";
+import type { Caption } from "@remotion/captions";
 import { CaptionOverlay } from "../components/CaptionOverlay";
 import { LogoWatermark } from "../components/LogoWatermark";
 import { OutroCard } from "./OutroCard";
@@ -14,6 +15,8 @@ const OUTRO_FRAMES = 90; // 3s at 30fps
 export type MultiSegmentShortProps = {
   videoSrc: string;
   captionsFile: string; // already remapped to new timeline
+  /** Pre-loaded captions — when provided, skips the per-frame fetch in CaptionOverlay */
+  captionsData?: Caption[];
   segments: Array<{ startMs: number; endMs: number }>;
   showBranding?: boolean;
 };
@@ -21,6 +24,7 @@ export type MultiSegmentShortProps = {
 export const MultiSegmentShort: React.FC<MultiSegmentShortProps> = ({
   videoSrc,
   captionsFile,
+  captionsData,
   segments,
   showBranding = true,
 }) => {
@@ -54,6 +58,7 @@ export const MultiSegmentShort: React.FC<MultiSegmentShortProps> = ({
       ))}
       <CaptionOverlay
         captionsFile={captionsFile}
+        captionsData={captionsData}
         startOffsetMs={0}
         endOffsetMs={cumulativeFrames / fps * 1000}
         bottomPadding={240}
