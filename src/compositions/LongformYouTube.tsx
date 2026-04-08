@@ -5,6 +5,7 @@ import {
   staticFile,
   useVideoConfig,
 } from "remotion";
+import type { Caption } from "@remotion/captions";
 import { CaptionOverlay } from "../components/CaptionOverlay";
 import { LogoWatermark } from "../components/LogoWatermark";
 import { SectionCard } from "../components/SectionCard";
@@ -12,6 +13,8 @@ import { SectionCard } from "../components/SectionCard";
 export type LongformYouTubeProps = {
   videoSrc: string;
   captionsFile: string;
+  /** Pre-loaded captions — when provided, skips the per-frame fetch in CaptionOverlay */
+  captionsData?: Caption[];
   sections: Array<{
     title: string;
     subtitle?: string;
@@ -26,6 +29,7 @@ const SECTION_CARD_FRAMES = 105; // 3.5s at 30fps — matches SectionCard's own 
 export const LongformYouTube: React.FC<LongformYouTubeProps> = ({
   videoSrc,
   captionsFile,
+  captionsData,
   sections,
 }) => {
   const { fps } = useVideoConfig();
@@ -50,6 +54,7 @@ export const LongformYouTube: React.FC<LongformYouTubeProps> = ({
 
       <CaptionOverlay
         captionsFile={captionsFile}
+        captionsData={captionsData}
         startOffsetMs={0}
         bottomPadding={60}
       />

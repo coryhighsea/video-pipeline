@@ -63,6 +63,8 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
 
 interface CaptionOverlayProps {
   captionsFile?: string;
+  /** Pre-loaded captions data — when provided, skips the fetch entirely */
+  captionsData?: Caption[];
   /** ms offset into the source video where this composition starts (for clip extracts) */
   startOffsetMs?: number;
   /** ms offset where the clip ends — captions beyond this are excluded */
@@ -73,34 +75,38 @@ interface CaptionOverlayProps {
 
 export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   captionsFile = "captions-what-is-nis2.json",
+  captionsData,
   startOffsetMs = 0,
   endOffsetMs = Infinity,
   bottomPadding = 80,
 }) => {
-  const [captions, setCaptions] = useState<Caption[] | null>(null);
+  const [captions, setCaptions] = useState<Caption[] | null>(captionsData ?? null);
   const [missing, setMissing] = useState(false);
   const { fps } = useVideoConfig();
   const { delayRender, continueRender } = useDelayRender();
-  const [handle] = useState(() => delayRender("Loading captions"));
+  // When captionsData is provided, resolve immediately so no frame is blocked
+  const [handle] = useState(() => captionsData ? null : delayRender("Loading captions"));
 
   const fetchCaptions = useCallback(async () => {
+    if (captionsData) return; // already loaded
+    const h = handle!;
     try {
       const response = await fetch(
         staticFile(captionsFile),
       );
       if (!response.ok) {
         setMissing(true);
-        continueRender(handle);
+        continueRender(h);
         return;
       }
       const data = await response.json();
       setCaptions(data as Caption[]);
-      continueRender(handle);
+      continueRender(h);
     } catch {
       setMissing(true);
-      continueRender(handle);
+      continueRender(h);
     }
-  }, [continueRender, handle, captionsFile]);
+  }, [continueRender, handle, captionsFile, captionsData]);
 
   useEffect(() => {
     fetchCaptions();
