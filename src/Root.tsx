@@ -20,6 +20,8 @@ import { MultiSegmentShort } from "./compositions/MultiSegmentShort";
 import type { MultiSegmentShortProps } from "./compositions/MultiSegmentShort";
 import { LongformYouTube } from "./compositions/LongformYouTube";
 import type { LongformYouTubeProps } from "./compositions/LongformYouTube";
+import { HalvingEuropes } from "./compositions/HalvingEuropes";
+import { HalvingEuropesThumbnail } from "./compositions/HalvingEuropesThumbnail";
 import { OutroCard } from "./compositions/OutroCard";
 import { ScotchSoda } from "./compositions/ScotchSoda";
 import { SitdownEpisode } from "./compositions/SitdownEpisode";
@@ -657,6 +659,133 @@ export const RemotionRoot: React.FC = () => {
         width={1280}
         height={720}
       />
+      {/* ─── Halving Europe's €31B Bill (Apr 2026) ─── */}
+      <Composition
+        id="HalvingEuropes-YouTube"
+        component={HalvingEuropes}
+        durationInFrames={7650}
+        fps={FPS}
+        width={DIMENSIONS["16x9"].width}
+        height={DIMENSIONS["16x9"].height}
+      />
+      <Still
+        id="HalvingEuropes-Thumbnail"
+        component={HalvingEuropesThumbnail}
+        width={1280}
+        height={720}
+      />
+      {/* Short 1: What NIS2 Actually Requires (0:20–0:55) */}
+      <Composition
+        id="HalvingEuropes-Short-WhatNIS2Requires"
+        component={NIS2Short}
+        durationInFrames={1140}
+        fps={FPS}
+        width={1080}
+        height={1920}
+        defaultProps={
+          {
+            videoSrc: "halving-Europes-31b-bill.mp4",
+            captionsFile: "captions-halving-europes.json",
+            clipStartMs: 20000,
+            clipEndMs: 55000,
+            sectionTitle: "What NIS2 Actually Requires",
+            sectionSubtitle: "49 Requirements Explained",
+            stats: [
+              { fromFrame: 30, value: "49", label: "NIS2\nrequirements" },
+            ],
+            showOutro: true,
+          } satisfies NIS2ShortProps
+        }
+      />
+      {/* Short 2: The Consulting Playbook (0:55–2:09) */}
+      <Composition
+        id="HalvingEuropes-Short-ConsultingPlaybook"
+        component={NIS2Short}
+        durationInFrames={2310}
+        fps={FPS}
+        width={1080}
+        height={1920}
+        defaultProps={
+          {
+            videoSrc: "halving-Europes-31b-bill.mp4",
+            captionsFile: "captions-halving-europes.json",
+            clipStartMs: 55000,
+            clipEndMs: 129000,
+            sectionTitle: "The Consulting Playbook",
+            sectionSubtitle: "€150K for a PDF",
+            stats: [
+              { fromFrame: 210, value: "€150K", label: "for a PDF\nyou could make free" },
+            ],
+            showOutro: true,
+          } satisfies NIS2ShortProps
+        }
+      />
+      {/* Short 3: We Made It Free (2:09–2:56) */}
+      <Composition
+        id="HalvingEuropes-Short-WeMadeItFree"
+        component={NIS2Short}
+        durationInFrames={1500}
+        fps={FPS}
+        width={1080}
+        height={1920}
+        defaultProps={
+          {
+            videoSrc: "halving-Europes-31b-bill.mp4",
+            captionsFile: "captions-halving-europes.json",
+            clipStartMs: 129000,
+            clipEndMs: 176000,
+            sectionTitle: "We Made It Free",
+            sectionSubtitle: "No Consultants Needed",
+            stats: [],
+            showOutro: true,
+          } satisfies NIS2ShortProps
+        }
+      />
+      {/* Short 4: Who's In Scope (2:56–3:45) */}
+      <Composition
+        id="HalvingEuropes-Short-WhoIsInScope"
+        component={NIS2Short}
+        durationInFrames={1560}
+        fps={FPS}
+        width={1080}
+        height={1920}
+        defaultProps={
+          {
+            videoSrc: "halving-Europes-31b-bill.mp4",
+            captionsFile: "captions-halving-europes.json",
+            clipStartMs: 176000,
+            clipEndMs: 225000,
+            sectionTitle: "Who's In Scope",
+            sectionSubtitle: "160K EU Companies",
+            stats: [
+              { fromFrame: 30, value: "160K", label: "companies\nacross Europe" },
+            ],
+            showOutro: true,
+          } satisfies NIS2ShortProps
+        }
+      />
+      {/* Short 5: Get Started Free (3:45–4:12) */}
+      <Composition
+        id="HalvingEuropes-Short-GetStarted"
+        component={NIS2Short}
+        durationInFrames={900}
+        fps={FPS}
+        width={1080}
+        height={1920}
+        defaultProps={
+          {
+            videoSrc: "halving-Europes-31b-bill.mp4",
+            captionsFile: "captions-halving-europes.json",
+            clipStartMs: 225000,
+            clipEndMs: 252000,
+            sectionTitle: "Get Started Free",
+            sectionSubtitle: "nisd2.eu",
+            stats: [],
+            showOutro: true,
+          } satisfies NIS2ShortProps
+        }
+      />
+
       {/* ─── Pipeline: dynamic compositions for automated rendering ─── */}
       {/* PipelineClip — single segment (legacy, kept for static compositions) */}
       <Composition

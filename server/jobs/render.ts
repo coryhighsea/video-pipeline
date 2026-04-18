@@ -62,6 +62,76 @@ async function prepareClip(clip: typeof clips.$inferSelect, absVideoPath: string
   });
 }
 
+function makeTmpPublicDir(neededFiles: string[]): string {
+  const tmpDir = fs.mkdtempSync(path.join(import.meta.dir, "..", "..", "tmp-public-"));
+  for (const absFile of neededFiles) {
+    const name = path.basename(absFile);
+    fs.symlinkSync(absFile, path.join(tmpDir, name));
+  }
+  // Always include logo.png
+  const logo = path.join(PUBLIC_DIR, "logo.png");
+  if (fs.existsSync(logo)) {
+    try { fs.symlinkSync(logo, path.join(tmpDir, "logo.png")); } catch { /* skip if already linked */ }
+  }
+  return tmpDir;
+}
+
+type SpawnedProc = ReturnType<typeof Bun.spawn>;
+
+async function drainProcess(
+  proc: SpawnedProc,
+  label: string,
+  jobId: string,
+): Promise<{ exitCode: number; stderrText: string }> {
+  const decoder = new TextDecoder();
+
+  // Read stdout — forward progress lines as SSE events
+  const stdoutReader = (proc.stdout as ReadableStream<Uint8Array>).getReader();
+  let lastReportedPct = -1;
+  const stdoutDone = (async () => {
+    while (true) {
+      const { done, value } = await stdoutReader.read();
+      if (done) break;
+      const text = decoder.decode(value);
+      for (const line of text.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const pctMatch = trimmed.match(/\b(\d+)%/);
+        const hasFraction = /\d+\/\d+/.test(trimmed);
+        if (pctMatch && hasFraction) {
+          const pct = parseInt(pctMatch[1], 10);
+          const milestone = Math.floor(pct / 10) * 10;
+          if (milestone > lastReportedPct) {
+            lastReportedPct = milestone;
+            const msg = `${milestone}% rendered`;
+            console.log(`${label} ${msg}`);
+            emitJobEvent(jobId, { type: "progress", message: msg });
+          }
+        } else {
+          console.log(`${label} ${trimmed}`);
+          emitJobEvent(jobId, { type: "progress", message: trimmed });
+        }
+      }
+    }
+  })();
+
+  // Read stderr concurrently — prevents pipe buffer deadlock if Remotion writes a long error
+  const stderrChunks: string[] = [];
+  const stderrDecoder = new TextDecoder();
+  const stderrDone = (async () => {
+    const reader = (proc.stderr as ReadableStream<Uint8Array>).getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      stderrChunks.push(stderrDecoder.decode(value));
+    }
+  })();
+
+  const exitCode = await proc.exited;
+  await Promise.all([stdoutDone, stderrDone]);
+  return { exitCode, stderrText: stderrChunks.join("") };
+}
+
 function toSlug(title: string): string {
   return title
     .toLowerCase()
@@ -145,47 +215,31 @@ export async function renderClip(jobId: string, clipId: string, showBranding = t
     console.log(`${label} Duration: ${Math.round(totalDurationMs / 1000)}s | captions: ${captionsFilename}`);
     emitJobEvent(jobId, { type: "progress", message: `Rendering "${clip.title}" (${Math.round(totalDurationMs / 1000)}s)...` });
 
+    const tmpPublicDir = makeTmpPublicDir([
+      path.join(PUBLIC_DIR, gapEditedFilename),
+      path.join(PUBLIC_DIR, captionsFilename),
+    ]);
+
+    let tmpDirCleaned = false;
+    const cleanTmp = () => {
+      if (tmpDirCleaned) return;
+      tmpDirCleaned = true;
+      try { fs.rmSync(tmpPublicDir, { recursive: true }); } catch { /* ignore */ }
+    };
+
     const proc = Bun.spawn(
       [
         "bunx", "remotion", "render", "PipelineMultiClip",
         outputPath,
         "--props", props,
         "--concurrency", "4",
+        "--public-dir", tmpPublicDir,
       ],
       { cwd: VIDEOS_DIR, stdout: "pipe", stderr: "pipe" }
     );
 
-    const decoder = new TextDecoder();
-    const reader = proc.stdout.getReader();
-    let lastReportedPct = -1;
-    (async () => {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const text = decoder.decode(value);
-        for (const line of text.split("\n")) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          const pctMatch = trimmed.match(/\b(\d+)%/);
-          const hasFraction = /\d+\/\d+/.test(trimmed);
-          if (pctMatch && hasFraction) {
-            const pct = parseInt(pctMatch[1], 10);
-            const milestone = Math.floor(pct / 10) * 10;
-            if (milestone > lastReportedPct) {
-              lastReportedPct = milestone;
-              const msg = `${milestone}% rendered`;
-              console.log(`${label} ${msg}`);
-              emitJobEvent(jobId, { type: "progress", message: msg });
-            }
-          } else {
-            console.log(`${label} ${trimmed}`);
-            emitJobEvent(jobId, { type: "progress", message: trimmed });
-          }
-        }
-      }
-    })();
-
-    const exitCode = await proc.exited;
+    const { exitCode, stderrText } = await drainProcess(proc, label, jobId);
+    cleanTmp();
 
     if (exitCode === 0) {
       await db.update(clips).set({
@@ -198,8 +252,7 @@ export async function renderClip(jobId: string, clipId: string, showBranding = t
       console.log(`${label} ${msg}`);
       emitJobEvent(jobId, { type: "progress", message: msg });
     } else {
-      const stderr = await new Response(proc.stderr).text();
-      throw new Error(stderr.slice(-500));
+      throw new Error(stderrText.slice(-1000) || "Remotion exited non-zero with no stderr output");
     }
 
   } catch (err) {
@@ -263,47 +316,31 @@ export async function renderLongform(jobId: string): Promise<void> {
     console.log(`${label} Duration: ${Math.round(durationMs / 1000)}s, ${sortedSections.length} sections`);
     emitJobEvent(jobId, { type: "progress", message: `Rendering 16:9 (${Math.round(durationMs / 1000)}s, ${sortedSections.length} sections)...` });
 
+    const tmpPublicDir = makeTmpPublicDir([
+      path.join(VIDEOS_DIR, job.editedVideoPath),
+      path.join(VIDEOS_DIR, job.editedCaptionsPath),
+    ]);
+
+    let tmpDirCleaned = false;
+    const cleanTmp = () => {
+      if (tmpDirCleaned) return;
+      tmpDirCleaned = true;
+      try { fs.rmSync(tmpPublicDir, { recursive: true }); } catch { /* ignore */ }
+    };
+
     const proc = Bun.spawn(
       [
         "bunx", "remotion", "render", "PipelineLongform",
         outputPath,
         "--props", props,
         "--concurrency", "4",
+        "--public-dir", tmpPublicDir,
       ],
       { cwd: VIDEOS_DIR, stdout: "pipe", stderr: "pipe" }
     );
 
-    const decoder = new TextDecoder();
-    const reader = proc.stdout.getReader();
-    let lastReportedPct = -1;
-    (async () => {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const text = decoder.decode(value);
-        for (const line of text.split("\n")) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          const pctMatch = trimmed.match(/\b(\d+)%/);
-          const hasFraction = /\d+\/\d+/.test(trimmed);
-          if (pctMatch && hasFraction) {
-            const pct = parseInt(pctMatch[1], 10);
-            const milestone = Math.floor(pct / 10) * 10;
-            if (milestone > lastReportedPct) {
-              lastReportedPct = milestone;
-              const msg = `${milestone}% rendered`;
-              console.log(`${label} ${msg}`);
-              emitJobEvent(jobId, { type: "progress", message: msg });
-            }
-          } else {
-            console.log(`${label} ${trimmed}`);
-            emitJobEvent(jobId, { type: "progress", message: trimmed });
-          }
-        }
-      }
-    })();
-
-    const exitCode = await proc.exited;
+    const { exitCode, stderrText } = await drainProcess(proc, label, jobId);
+    cleanTmp();
 
     if (exitCode === 0) {
       await db.update(jobs).set({
@@ -318,8 +355,7 @@ export async function renderLongform(jobId: string): Promise<void> {
       emitJobEvent(jobId, { type: "status", status: "done", message: "16:9 video rendered." });
       emitJobEvent(jobId, { type: "done" });
     } else {
-      const stderr = await new Response(proc.stderr).text();
-      throw new Error(stderr.slice(-500));
+      throw new Error(stderrText.slice(-1000) || "Remotion exited non-zero with no stderr output");
     }
 
   } catch (err) {

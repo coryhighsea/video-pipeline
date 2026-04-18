@@ -1,6 +1,5 @@
 import {
   AbsoluteFill,
-  Html5Audio,
   OffthreadVideo,
   Sequence,
   staticFile,
@@ -10,6 +9,9 @@ import { CaptionOverlay } from "../components/CaptionOverlay";
 import { LogoWatermark } from "../components/LogoWatermark";
 import { SectionCard } from "../components/SectionCard";
 import { StatCallout } from "../components/StatCallout";
+import { OutroCard } from "./OutroCard";
+
+const OUTRO_FRAMES = 90;
 
 export type NIS2ShortProps = {
   videoSrc: string;
@@ -19,6 +21,7 @@ export type NIS2ShortProps = {
   sectionTitle: string;
   sectionSubtitle: string;
   stats: Array<{ fromFrame: number; value: string; label: string }>;
+  showOutro?: boolean;
 };
 
 const SECTION_CARD_DURATION = 105; // 3.5s
@@ -32,16 +35,16 @@ export const NIS2Short: React.FC<NIS2ShortProps> = ({
   sectionTitle,
   sectionSubtitle,
   stats,
+  showOutro = false,
 }) => {
   const { fps } = useVideoConfig();
   const trimBefore = (clipStartMs / 1000) * fps;
   const trimAfter = (clipEndMs / 1000) * fps;
+  const clipDurationFrames = Math.round(((clipEndMs - clipStartMs) / 1000) * fps);
 
   return (
     <AbsoluteFill style={{ background: "#000" }}>
       {/* ─── Background music — quiet under voice ─── */}
-      <Html5Audio src={staticFile("music.mp3")} volume={0.08} loop />
-
       {/* ─── Zoomed & cropped talking-head video ─── */}
       {/* objectFit "cover" on a 9:16 container from a 16:9 source scales by
           height (1920/1080 = 1.78×), cropping the sides — keeps face centred */}
@@ -83,6 +86,12 @@ export const NIS2Short: React.FC<NIS2ShortProps> = ({
           <StatCallout value={s.value} label={s.label} />
         </Sequence>
       ))}
+
+      {showOutro && (
+        <Sequence from={clipDurationFrames} durationInFrames={OUTRO_FRAMES} layout="none">
+          <OutroCard />
+        </Sequence>
+      )}
     </AbsoluteFill>
   );
 };

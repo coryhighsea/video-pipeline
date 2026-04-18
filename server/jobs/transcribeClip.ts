@@ -31,6 +31,7 @@ export async function transcribeFullVideo(
   jobId: string,
   absVideoPath: string,
 ): Promise<Caption[]> {
+  fs.mkdirSync(TMP_DIR, { recursive: true });
   await ensureWhisper();
 
   const CHUNK_MS = 10 * 60 * 1000; // 10-minute chunks
@@ -125,6 +126,7 @@ export async function transcribeClipSegments(
 ): Promise<{ captions: Caption[]; captionsFilename: string }> {
   await ensureWhisper();
 
+  fs.mkdirSync(TMP_DIR, { recursive: true });
   const allCaptions: Caption[] = [];
 
   for (let i = 0; i < segments.length; i++) {
