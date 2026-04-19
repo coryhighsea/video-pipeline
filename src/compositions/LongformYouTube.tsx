@@ -31,6 +31,7 @@ export const LongformYouTube: React.FC<LongformYouTubeProps> = ({
   captionsFile,
   captionsData,
   sections,
+  durationMs,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -56,6 +57,7 @@ export const LongformYouTube: React.FC<LongformYouTubeProps> = ({
         captionsFile={captionsFile}
         captionsData={captionsData}
         startOffsetMs={0}
+        endOffsetMs={durationMs}
         bottomPadding={60}
       />
       <LogoWatermark />

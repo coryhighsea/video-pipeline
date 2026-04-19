@@ -190,6 +190,14 @@ app.post("/:id/render-shorts", async (c) => {
   const jobId = c.req.param("id");
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
   if (!job) return c.json({ error: "Not found" }, 404);
+
+  let body: { showBranding?: boolean } = {};
+  try { body = await c.req.json(); } catch { /* no body is fine */ }
+
+  if (body.showBranding !== undefined) {
+    await db.update(jobs).set({ showBranding: body.showBranding, updatedAt: new Date() }).where(eq(jobs.id, jobId));
+  }
+
   enqueueTranscription(() => renderApprovedClips(jobId).then(() => {}));
   return c.json({ started: true });
 });

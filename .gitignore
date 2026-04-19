@@ -24,13 +24,16 @@ whisper.cpp/
 # Pipeline server — uploads, temp files, secrets
 uploads/
 tmp/
+tmp-public-*/
 server/node_modules/
 server/.env
 
 # Uploaded videos copied to public/ for Remotion staticFile()
 public/*.mp4
+halving-Europes-31b-bill.mp4
 
 # Generated captions — created by pipeline processing, not needed in repo
 public/captions-*-remapped.json
 public/captions-*.json
+public/captions-halving-europes.json
 public/gap-edited-*.mp4
