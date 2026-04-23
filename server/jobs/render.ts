@@ -62,16 +62,34 @@ async function prepareClip(clip: typeof clips.$inferSelect, absVideoPath: string
   });
 }
 
+function linkOrCopy(src: string, dest: string): void {
+  try {
+    fs.linkSync(src, dest);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    // EXDEV = cross-device link, EPERM = some FSes (e.g., volume mounts) disallow hardlinks
+    if (code === "EXDEV" || code === "EPERM") {
+      fs.copyFileSync(src, dest);
+    } else {
+      throw err;
+    }
+  }
+}
+
 function makeTmpPublicDir(neededFiles: string[]): string {
+  for (const absFile of neededFiles) {
+    if (!fs.existsSync(absFile)) {
+      throw new Error(`Required file missing on disk: ${absFile}. The clip's processed files may have been deleted — try re-editing the clip to regenerate them.`);
+    }
+  }
   const tmpDir = fs.mkdtempSync(path.join(import.meta.dir, "..", "..", "tmp-public-"));
   for (const absFile of neededFiles) {
-    const name = path.basename(absFile);
-    fs.symlinkSync(absFile, path.join(tmpDir, name));
+    linkOrCopy(absFile, path.join(tmpDir, path.basename(absFile)));
   }
   // Always include logo.png
   const logo = path.join(PUBLIC_DIR, "logo.png");
   if (fs.existsSync(logo)) {
-    try { fs.symlinkSync(logo, path.join(tmpDir, "logo.png")); } catch { /* skip if already linked */ }
+    linkOrCopy(logo, path.join(tmpDir, "logo.png"));
   }
   return tmpDir;
 }
