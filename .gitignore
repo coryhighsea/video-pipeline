@@ -29,6 +29,7 @@ server/node_modules/
 server/.env
 
 # Uploaded videos copied to public/ for Remotion staticFile()
+public/*
 public/*.mp4
 halving-Europes-31b-bill.mp4
 

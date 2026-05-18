@@ -7,14 +7,15 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
-    "hono": "^4.7.0",
-    "drizzle-orm": "^0.38.3",
-    "postgres": "^3.4.5",
-    "drizzle-zod": "^0.7.0",
-    "zod": "^4.0.0",
-    "ai": "^6.0.0",
+    "@ai-sdk/anthropic": "^3.0.76",
     "@ai-sdk/xai": "^3.0.0",
-    "@remotion/install-whisper-cpp": "4.0.422"
+    "@remotion/install-whisper-cpp": "4.0.422",
+    "ai": "^6.0.0",
+    "drizzle-orm": "^0.38.3",
+    "drizzle-zod": "^0.7.0",
+    "hono": "^4.7.0",
+    "postgres": "^3.4.5",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "drizzle-kit": "^0.30.4",

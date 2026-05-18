@@ -1,4 +1,4 @@
-import { createXai } from "@ai-sdk/xai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
 import { z } from "zod";
 import path from "path";
@@ -8,7 +8,7 @@ import { jobs, clips } from "../schema";
 import { eq } from "drizzle-orm";
 import { emitJobEvent } from "./queue";
 import { transcribeClipSegments, transcribeFullVideo, buildTranscriptFromCaptions } from "./transcribeClip";
-import { grokEditClip } from "./grokEdit";
+import { claudeEditClip } from "./claudeEdit";
 import { remapCaptions } from "../lib/remapCaptions";
 import { runLongformAnalysis } from "./analyzeLongform";
 
@@ -31,7 +31,7 @@ const ClipSuggestionSchema = z.object({
           .min(1)
           .max(4)
           .describe("1-4 time ranges to stitch together with hard cuts. Use multiple segments to combine a topic mentioned early and revisited later, or to skip dead air between two good moments."),
-        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 30 and 60."),
+        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 10 and 90."),
       })
     )
     .min(2)
@@ -67,17 +67,17 @@ export async function runAnalysis(jobId: string): Promise<void> {
       console.log(`[analyze] Transcript length: ${transcriptText.length} chars`);
     }
 
-    emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Sending transcript to Grok for clip suggestions..." });
+    emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Sending transcript to Claude for clip suggestions..." });
 
-    const apiKey = process.env.XAI_API_KEY;
-    if (!apiKey) throw new Error("XAI_API_KEY environment variable is not set");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY environment variable is not set");
 
-    const xai = createXai({ apiKey });
+    const anthropic = createAnthropic({ apiKey });
 
-    // ── Step 1: Grok 1 — clip suggestions ────────────────────────────────
-    console.log("[analyze] Calling Grok 1 for clip suggestions...");
+    // ── Step 1: Claude — clip suggestions ────────────────────────────────
+    console.log("[analyze] Calling Claude for clip suggestions...");
     const { object } = await generateObject({
-      model: xai("grok-4-1-fast-reasoning"),
+      model: anthropic("claude-opus-4-7"),
       schema: ClipSuggestionSchema,
       system: `You are a video editor for a NIS2 cybersecurity compliance startup called NISD2.
 The founders (Simon and Cory) record their daily standup meetings and post the best moments as LinkedIn/YouTube Shorts.
@@ -92,7 +92,8 @@ WHAT MAKES A GOOD CLIP:
 - Relatable founder struggles: stress, chaos, small wins
 
 HARD RULES:
-- totalDurationSeconds must be 30–60. It equals the sum of all segment durations, NOT wall-clock end-to-start.
+- totalDurationSeconds must be 10–90. It equals the sum of all segment durations, NOT wall-clock end-to-start.
+- Prefer clips that are naturally 15–45 seconds. Only go longer if the content genuinely requires it.
 - Each segment starts and ends at complete sentence boundaries.
 - The clip must be self-contained — a stranger should understand it with no prior context.
 - Use multiple segments to: stitch a topic mentioned early with its conclusion later, skip logistical filler between two strong moments, combine a question and its answer separated by tangents.
@@ -109,8 +110,8 @@ Transcript:
 ${transcriptText}`,
     });
 
-    console.log(`[analyze] Grok 1 returned ${object.clips.length} clip suggestions`);
-    emitJobEvent(jobId, { type: "progress", message: `Grok suggested ${object.clips.length} clips. Starting Whisper + edit pass...` });
+    console.log(`[analyze] Claude returned ${object.clips.length} clip suggestions`);
+    emitJobEvent(jobId, { type: "progress", message: `Claude suggested ${object.clips.length} clips. Starting Whisper + edit pass...` });
 
     // ── Step 2: Insert clips, then Whisper + Grok 2 per clip ─────────────
     const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
@@ -141,11 +142,11 @@ ${transcriptText}`,
         const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments);
         console.log(`[analyze] Clip ${i + 1}: Whisper returned ${captions.length} words`);
 
-        emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: Grok editing "${suggestion.title}"...` });
+        emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: Claude editing "${suggestion.title}"...` });
 
-        // Grok 2 — edit decisions using word-level captions + title + rationale
-        console.log(`[analyze] Clip ${i + 1}: calling Grok 2 for edit decisions...`);
-        const { removedIntervals, outputFilename: gapEditedFilename } = await grokEditClip({
+        // Claude edit — edit decisions using word-level captions + title + rationale
+        console.log(`[analyze] Clip ${i + 1}: calling Claude for edit decisions...`);
+        const { removedIntervals, outputFilename: gapEditedFilename } = await claudeEditClip({
           clipId,
           absInputPath: absVideoPath,
           segments: suggestion.segments,
