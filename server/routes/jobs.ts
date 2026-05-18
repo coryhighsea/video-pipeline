@@ -7,6 +7,7 @@ import { eq, desc, asc, inArray } from "drizzle-orm";
 import { jobEvents, type PipelineEvent, enqueueTranscription } from "../jobs/queue";
 import { runAnalysis } from "../jobs/analyze";
 import { renderApprovedClips, renderLongform } from "../jobs/render";
+import { processImportedClips } from "../jobs/processImportedClips";
 
 const VIDEOS_DIR = path.join(import.meta.dir, "..", "..");
 
@@ -95,7 +96,66 @@ app.get("/:id/events", (c) => {
   );
 });
 
-// Re-run Grok analysis (optionally update customContext first)
+// Inject Claude Code–suggested clips, bypassing the automated analyze step.
+// Deletes existing clips, inserts new ones, then triggers Whisper + Claude edit + ffmpeg per clip.
+app.post("/:id/import-clips", async (c) => {
+  const jobId = c.req.param("id");
+  const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
+  if (!job) return c.json({ error: "Not found" }, 404);
+
+  const renderingClips = await db
+    .select()
+    .from(clips)
+    .where(eq(clips.jobId, jobId))
+    .then((rows) => rows.filter((cl) => cl.status === "rendering"));
+  if (renderingClips.length > 0) {
+    return c.json({ error: "A clip is currently rendering — cannot replace clips now." }, 409);
+  }
+
+  let body: { clips?: { title: string; rationale?: string; segments: { startMs: number; endMs: number }[] }[] } = {};
+  try { body = await c.req.json(); } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  if (!Array.isArray(body.clips) || body.clips.length === 0) {
+    return c.json({ error: "clips array is required and must be non-empty" }, 400);
+  }
+
+  // Delete all existing clips for this job
+  const existingClips = await db.select().from(clips).where(eq(clips.jobId, jobId));
+  for (const clip of existingClips) {
+    const VIDEOS_DIR = path.join(import.meta.dir, "..", "..");
+    if (clip.gapEditedPath) deleteIfExists(path.join(VIDEOS_DIR, clip.gapEditedPath));
+    if (clip.clipCaptionsPath) deleteIfExists(path.join(VIDEOS_DIR, clip.clipCaptionsPath));
+  }
+  await db.delete(clips).where(eq(clips.jobId, jobId));
+
+  // Insert new clips as suggested
+  const now = new Date();
+  for (let i = 0; i < body.clips.length; i++) {
+    const c2 = body.clips[i];
+    await db.insert(clips).values({
+      id: crypto.randomUUID(),
+      jobId,
+      title: c2.title,
+      rationale: c2.rationale ?? null,
+      segments: c2.segments,
+      sortOrder: i,
+      status: "suggested",
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  // Transition job to analyzing and enqueue per-clip processing
+  await db.update(jobs).set({ status: "analyzing", updatedAt: new Date() }).where(eq(jobs.id, jobId));
+
+  enqueueTranscription(() => processImportedClips(jobId));
+
+  return c.json({ ok: true, clipCount: body.clips.length });
+});
+
+// Re-run Claude analysis (optionally update customContext first)
 app.post("/:id/analyze", async (c) => {
   const jobId = c.req.param("id");
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
