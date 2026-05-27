@@ -14,12 +14,14 @@
     "drizzle-orm": "^0.38.3",
     "drizzle-zod": "^0.7.0",
     "hono": "^4.7.0",
+    "pdfkit": "^0.18.0",
     "postgres": "^3.4.5",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.30.4",
     "@types/bun": "latest",
+    "@types/pdfkit": "^0.17.6",
+    "drizzle-kit": "^0.30.4",
     "typescript": "5.9.3"
   }
 }

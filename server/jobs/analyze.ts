@@ -11,6 +11,7 @@ import { transcribeClipSegments, transcribeFullVideo, buildTranscriptFromCaption
 import { claudeEditClip } from "./claudeEdit";
 import { remapCaptions } from "../lib/remapCaptions";
 import { runLongformAnalysis } from "./analyzeLongform";
+import { runLectureAnalysis } from "./analyzeLecture";
 
 const VIDEOS_DIR = path.join(import.meta.dir, "..", "..");
 const PUBLIC_DIR = path.join(VIDEOS_DIR, "public");
@@ -82,6 +83,10 @@ export async function runAnalysis(jobId: string): Promise<void> {
 
   if (job.mode === "transcribe") {
     return runTranscribeOnly(jobId);
+  }
+
+  if (job.mode === "lecture") {
+    return runLectureAnalysis(jobId);
   }
 
   // Dispatch to longform pipeline when no transcript was uploaded

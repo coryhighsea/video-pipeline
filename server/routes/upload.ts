@@ -38,7 +38,8 @@ app.post("/", async (c) => {
   // Transcript is optional — if not provided, Grok analysis is skipped (job stays at analyzing)
   const hasTranscript = transcriptFile && typeof transcriptFile !== "string";
 
-  const transcribeOnly = formData.get("transcribeOnly") === "true";
+  // "mode" overrides: auto (default) | transcribe | lecture
+  const modeField = formData.get("mode");
   const languageRaw = formData.get("language");
   const language = (typeof languageRaw === "string" && languageRaw !== "auto") ? languageRaw : null;
 
@@ -90,7 +91,10 @@ app.post("/", async (c) => {
       id: uuid,
       originalFilename: (videoFile as File).name,
       uploadPath: `uploads/${videoFilename}`,
-      mode: hasTranscript ? "daily" : transcribeOnly ? "transcribe" : "longform",
+      mode: modeField === "transcribe" ? "transcribe"
+          : modeField === "lecture"    ? "lecture"
+          : hasTranscript              ? "daily"
+          : "longform",
       language,
       geminiTranscriptPath: hasTranscript ? `uploads/${transcriptFilename}` : null,
       transcriptText: grokTranscript,

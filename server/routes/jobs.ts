@@ -15,6 +15,10 @@ function deleteIfExists(filePath: string) {
   try { fs.unlinkSync(filePath); } catch { /* ignore */ }
 }
 
+function deleteDirIfExists(dirPath: string) {
+  try { fs.rmSync(dirPath, { recursive: true, force: true }); } catch { /* ignore */ }
+}
+
 const app = new Hono();
 
 async function getJobWithClips(jobId: string) {
@@ -230,9 +234,14 @@ app.delete("/:id", async (c) => {
   // Public copy has same filename as upload (just different dir)
   const publicCopy = job.uploadPath.replace(/^uploads\//, "public/");
   deleteIfExists(path.join(VIDEOS_DIR, publicCopy));
-  // Longform: edited master + edited captions
+  // Longform / lecture: edited master + edited captions / slides JSON
   if (job.editedVideoPath) deleteIfExists(path.join(VIDEOS_DIR, job.editedVideoPath));
   if (job.editedCaptionsPath) deleteIfExists(path.join(VIDEOS_DIR, job.editedCaptionsPath));
+  // Lecture: slide screenshots directory + PDF output
+  if (job.mode === "lecture") {
+    deleteDirIfExists(path.join(VIDEOS_DIR, "public", `slides-${job.id}`));
+    if (job.outputPath) deleteIfExists(path.join(VIDEOS_DIR, job.outputPath));
+  }
 
   // Delete DB record (clips cascade)
   await db.delete(jobs).where(eq(jobs.id, jobId));
