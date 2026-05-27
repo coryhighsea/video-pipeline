@@ -48,7 +48,7 @@ async function runTranscribeOnly(jobId: string): Promise<void> {
     emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Running Whisper transcription on full video..." });
 
     const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
-    const fullCaptions = await transcribeFullVideo(job.id, absVideoPath);
+    const fullCaptions = await transcribeFullVideo(job.id, absVideoPath, job.language);
     const transcriptText = buildTranscriptFromCaptions(fullCaptions);
     console.log(`[analyze] Transcribe-only: ${fullCaptions.length} words, ${transcriptText.length} chars`);
 
@@ -98,7 +98,7 @@ export async function runAnalysis(jobId: string): Promise<void> {
       emitJobEvent(jobId, { type: "status", status: "analyzing", message: "No transcript — running Whisper on full video..." });
       console.log("[analyze] No transcript found — transcribing full video with Whisper...");
       const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
-      const fullCaptions = await transcribeFullVideo(job.id, absVideoPath);
+      const fullCaptions = await transcribeFullVideo(job.id, absVideoPath, job.language);
       transcriptText = buildTranscriptFromCaptions(fullCaptions);
       console.log(`[analyze] Full-video Whisper complete: ${fullCaptions.length} words, ${transcriptText.length} chars`);
       // Save so re-analyze works without re-running Whisper
@@ -179,7 +179,7 @@ ${transcriptText}`,
       try {
         // Whisper — word-level timestamps for this clip's segments
         console.log(`[analyze] Clip ${i + 1}: running Whisper on ${suggestion.segments.length} segment(s)...`);
-        const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments);
+        const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments, job.language);
         console.log(`[analyze] Clip ${i + 1}: Whisper returned ${captions.length} words`);
 
         emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: Claude editing "${suggestion.title}"...` });

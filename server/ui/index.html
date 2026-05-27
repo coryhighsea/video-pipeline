@@ -228,6 +228,14 @@
           <span id="transcript-name">No .txt selected</span>
           <button class="btn-pick-transcript" onclick="document.getElementById('transcript-input').click()">Pick .txt</button>
         </div>
+        <div class="transcript-row">
+          <label>Language:</label>
+          <select id="language-select" style="flex:1;background:#1e1e1e;border:1px solid #333;color:#9ca3af;border-radius:4px;padding:2px 6px;font-size:11px;">
+            <option value="auto">Auto-detect</option>
+            <option value="de">German (de)</option>
+            <option value="en">English (en)</option>
+          </select>
+        </div>
         <div class="transcribe-row" id="transcribe-only-row">
           <input type="checkbox" id="transcribe-only-checkbox" />
           <label for="transcribe-only-checkbox">Transcribe only (skip clip suggestions)</label>
@@ -448,6 +456,7 @@
       formData.append("video", videoFile);
       if (selectedTranscriptFile) formData.append("transcript", selectedTranscriptFile);
       if (!selectedTranscriptFile && transcribeOnlyCheckbox.checked) formData.append("transcribeOnly", "true");
+      formData.append("language", document.getElementById("language-select").value);
 
       let jobId;
       try {
@@ -489,6 +498,7 @@
         document.getElementById("transcript-name").textContent = "No .txt selected";
         transcribeOnlyCheckbox.checked = false;
         transcribeOnlyRow.style.display = "";
+        document.getElementById("language-select").value = "auto";
       }, 2000);
 
       await loadJobs();
@@ -508,7 +518,7 @@
           <div class="job-name">${escHtml(j.originalFilename)}</div>
           <div class="job-meta">
             <span class="badge badge-${j.status}">${j.status.replace(/_/g," ")}</span>
-            <span class="badge badge-${j.mode || 'daily'}">${j.mode === 'longform' ? '16:9' : j.mode === 'transcribe' ? 'transcribe' : 'daily'}</span>
+            <span class="badge badge-${j.mode || 'daily'}">${j.mode === 'longform' ? '16:9' : j.mode === 'transcribe' ? 'txt' : 'daily'}</span>
             <span>${new Date(j.createdAt).toLocaleDateString()}</span>
             <button class="btn-delete-job" onclick="deleteJob(event, '${j.id}')" title="Delete job and files">✕</button>
           </div>
@@ -592,6 +602,10 @@
           <summary>Log output</summary>
           <div class="log-box" id="log-box"></div>
         </details>
+
+        <div style="margin-top:20px;">
+          <button class="btn btn-reject" style="font-size:12px;padding:6px 14px;" onclick="deleteJob(null, '${job.id}')">Delete job</button>
+        </div>
       `;
     }
 
@@ -888,7 +902,7 @@
     }
 
     async function deleteJob(e, jobId) {
-      e.stopPropagation();
+      if (e) e.stopPropagation();
       if (!confirm("Delete this job and all its files from disk?")) return;
       try {
         await api("DELETE", `/jobs/${jobId}`);

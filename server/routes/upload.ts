@@ -39,6 +39,8 @@ app.post("/", async (c) => {
   const hasTranscript = transcriptFile && typeof transcriptFile !== "string";
 
   const transcribeOnly = formData.get("transcribeOnly") === "true";
+  const languageRaw = formData.get("language");
+  const language = (typeof languageRaw === "string" && languageRaw !== "auto") ? languageRaw : null;
 
   const uuid = crypto.randomUUID();
   const videoExt = (videoFile as File).name.split(".").pop() ?? "mp4";
@@ -89,6 +91,7 @@ app.post("/", async (c) => {
       originalFilename: (videoFile as File).name,
       uploadPath: `uploads/${videoFilename}`,
       mode: hasTranscript ? "daily" : transcribeOnly ? "transcribe" : "longform",
+      language,
       geminiTranscriptPath: hasTranscript ? `uploads/${transcriptFilename}` : null,
       transcriptText: grokTranscript,
       status: "uploading",

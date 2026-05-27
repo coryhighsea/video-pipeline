@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
 import { transcribe, toCaptions } from "@remotion/install-whisper-cpp";
+import type { Language } from "@remotion/install-whisper-cpp";
 import { ensureWhisper, WHISPER_DIR, WHISPER_MODEL, WHISPER_VERSION } from "../lib/whisper";
 import type { Caption } from "../lib/remapCaptions";
 import type { ClipSegment } from "../schema";
@@ -40,6 +41,7 @@ export function getVideoDurationMs(absVideoPath: string): number {
 export async function transcribeFullVideo(
   jobId: string,
   absVideoPath: string,
+  language?: string | null,
 ): Promise<Caption[]> {
   fs.mkdirSync(TMP_DIR, { recursive: true });
   await ensureWhisper();
@@ -74,6 +76,7 @@ export async function transcribeFullVideo(
       whisperCppVersion: WHISPER_VERSION,
       inputPath: wavPath,
       tokenLevelTimestamps: true,
+      language: (language as Language) ?? null,
     });
 
     const { captions } = toCaptions({ whisperCppOutput: whisperOutput });
@@ -133,6 +136,7 @@ export async function transcribeClipSegments(
   clipId: string,
   absVideoPath: string,
   segments: ClipSegment[],
+  language?: string | null,
 ): Promise<{ captions: Caption[]; captionsFilename: string }> {
   await ensureWhisper();
 
@@ -156,6 +160,7 @@ export async function transcribeClipSegments(
       whisperCppVersion: WHISPER_VERSION,
       inputPath: wavPath,
       tokenLevelTimestamps: true,
+      language: (language as Language) ?? null,
     });
 
     const { captions } = toCaptions({ whisperCppOutput: whisperOutput });
