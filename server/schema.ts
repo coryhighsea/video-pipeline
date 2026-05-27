@@ -42,6 +42,7 @@ export const jobs = pgTable("jobs", {
   geminiTranscriptPath: text("gemini_transcript_path"),
   transcriptText: text("transcript_text"), // parsed Gemini text sent to Grok
   customContext: text("custom_context"),   // optional user-provided context for Grok analysis
+  language: text("language"),              // null = auto-detect, "en", "de", etc.
 
   // Longform mode: full-video edit outputs
   editedVideoPath: text("edited_video_path"),       // public/edited-{id}.mp4

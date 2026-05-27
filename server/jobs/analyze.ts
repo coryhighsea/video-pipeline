@@ -38,11 +38,51 @@ const ClipSuggestionSchema = z.object({
     .max(6),
 });
 
+async function runTranscribeOnly(jobId: string): Promise<void> {
+  console.log(`[analyze] Transcribe-only mode for job: ${jobId}`);
+  const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
+  if (!job) throw new Error(`Job ${jobId} not found`);
+
+  try {
+    await db.update(jobs).set({ status: "analyzing", updatedAt: new Date() }).where(eq(jobs.id, jobId));
+    emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Running Whisper transcription on full video..." });
+
+    const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
+    const fullCaptions = await transcribeFullVideo(job.id, absVideoPath, job.language);
+    const transcriptText = buildTranscriptFromCaptions(fullCaptions);
+    console.log(`[analyze] Transcribe-only: ${fullCaptions.length} words, ${transcriptText.length} chars`);
+
+    // Save word-level captions JSON so the UI can link to it
+    const captionsFilename = `captions-${jobId}-full.json`;
+    fs.writeFileSync(path.join(PUBLIC_DIR, captionsFilename), JSON.stringify(fullCaptions, null, 2));
+
+    await db.update(jobs).set({
+      transcriptText,
+      editedCaptionsPath: `public/${captionsFilename}`,
+      status: "done",
+      updatedAt: new Date(),
+    }).where(eq(jobs.id, jobId));
+
+    emitJobEvent(jobId, { type: "done" });
+    console.log(`[analyze] Transcribe-only job ${jobId} complete`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[analyze] Transcribe-only fatal error:", message);
+    await db.update(jobs).set({ status: "error", errorMessage: message, updatedAt: new Date() }).where(eq(jobs.id, jobId));
+    emitJobEvent(jobId, { type: "error", message });
+    throw err;
+  }
+}
+
 export async function runAnalysis(jobId: string): Promise<void> {
   console.log(`[analyze] Starting analysis for job: ${jobId}`);
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
 
   if (!job) throw new Error(`Job ${jobId} not found`);
+
+  if (job.mode === "transcribe") {
+    return runTranscribeOnly(jobId);
+  }
 
   // Dispatch to longform pipeline when no transcript was uploaded
   if (job.mode === "longform") {
@@ -58,7 +98,7 @@ export async function runAnalysis(jobId: string): Promise<void> {
       emitJobEvent(jobId, { type: "status", status: "analyzing", message: "No transcript — running Whisper on full video..." });
       console.log("[analyze] No transcript found — transcribing full video with Whisper...");
       const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
-      const fullCaptions = await transcribeFullVideo(job.id, absVideoPath);
+      const fullCaptions = await transcribeFullVideo(job.id, absVideoPath, job.language);
       transcriptText = buildTranscriptFromCaptions(fullCaptions);
       console.log(`[analyze] Full-video Whisper complete: ${fullCaptions.length} words, ${transcriptText.length} chars`);
       // Save so re-analyze works without re-running Whisper
@@ -139,7 +179,7 @@ ${transcriptText}`,
       try {
         // Whisper — word-level timestamps for this clip's segments
         console.log(`[analyze] Clip ${i + 1}: running Whisper on ${suggestion.segments.length} segment(s)...`);
-        const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments);
+        const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments, job.language);
         console.log(`[analyze] Clip ${i + 1}: Whisper returned ${captions.length} words`);
 
         emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: Claude editing "${suggestion.title}"...` });

@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
 import { transcribe, toCaptions } from "@remotion/install-whisper-cpp";
+import type { Language } from "@remotion/install-whisper-cpp";
 import { ensureWhisper, WHISPER_DIR, WHISPER_MODEL, WHISPER_VERSION } from "../lib/whisper";
 import type { Caption } from "../lib/remapCaptions";
 import type { ClipSegment } from "../schema";
@@ -14,10 +15,20 @@ const PUBLIC_DIR = path.join(VIDEOS_DIR, "public");
  * Gets video duration in milliseconds using ffprobe.
  */
 export function getVideoDurationMs(absVideoPath: string): number {
-  const out = execSync(
+  // MKV and some other containers store duration at the format level, not the stream level.
+  // Try stream duration first, then fall back to format duration.
+  let out = execSync(
     `ffprobe -v error -select_streams v:0 -show_entries stream=duration -of csv=p=0 "${absVideoPath}"`,
     { stdio: "pipe" }
   ).toString().trim();
+
+  if (!out || isNaN(parseFloat(out))) {
+    out = execSync(
+      `ffprobe -v error -show_entries format=duration -of csv=p=0 "${absVideoPath}"`,
+      { stdio: "pipe" }
+    ).toString().trim();
+  }
+
   const sec = parseFloat(out);
   if (isNaN(sec)) throw new Error(`Could not read duration from ${absVideoPath}`);
   return Math.round(sec * 1000);
@@ -30,6 +41,7 @@ export function getVideoDurationMs(absVideoPath: string): number {
 export async function transcribeFullVideo(
   jobId: string,
   absVideoPath: string,
+  language?: string | null,
 ): Promise<Caption[]> {
   fs.mkdirSync(TMP_DIR, { recursive: true });
   await ensureWhisper();
@@ -64,6 +76,7 @@ export async function transcribeFullVideo(
       whisperCppVersion: WHISPER_VERSION,
       inputPath: wavPath,
       tokenLevelTimestamps: true,
+      language: (language as Language) ?? null,
     });
 
     const { captions } = toCaptions({ whisperCppOutput: whisperOutput });
@@ -123,6 +136,7 @@ export async function transcribeClipSegments(
   clipId: string,
   absVideoPath: string,
   segments: ClipSegment[],
+  language?: string | null,
 ): Promise<{ captions: Caption[]; captionsFilename: string }> {
   await ensureWhisper();
 
@@ -146,6 +160,7 @@ export async function transcribeClipSegments(
       whisperCppVersion: WHISPER_VERSION,
       inputPath: wavPath,
       tokenLevelTimestamps: true,
+      language: (language as Language) ?? null,
     });
 
     const { captions } = toCaptions({ whisperCppOutput: whisperOutput });

@@ -38,7 +38,7 @@ export async function processImportedClips(jobId: string): Promise<void> {
     });
 
     try {
-      const { captions } = await transcribeClipSegments(clip.id, absVideoPath, segments);
+      const { captions } = await transcribeClipSegments(clip.id, absVideoPath, segments, job.language);
       console.log(`[importedClips] Clip ${i + 1}: Whisper returned ${captions.length} words`);
 
       emitJobEvent(jobId, {

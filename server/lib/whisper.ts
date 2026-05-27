@@ -4,7 +4,7 @@ import { installWhisperCpp, downloadWhisperModel } from "@remotion/install-whisp
 
 const WHISPER_DIR = path.join(import.meta.dir, "..", "..", "whisper-vol", "whisper.cpp");
 
-export const WHISPER_MODEL = "small.en" as const;
+export const WHISPER_MODEL = "small" as const;
 export const WHISPER_VERSION = "1.5.5" as const;
 export { WHISPER_DIR };
 

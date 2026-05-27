@@ -93,7 +93,7 @@ export async function runLongformAnalysis(jobId: string): Promise<void> {
     emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Transcribing full video with Whisper..." });
     console.log("[analyzeLongform] Phase 1: Whisper transcription");
 
-    let rawCaptions = await transcribeFullVideo(jobId, absVideoPath);
+    let rawCaptions = await transcribeFullVideo(jobId, absVideoPath, job.language);
     console.log(`[analyzeLongform] Whisper complete: ${rawCaptions.length} words`);
 
     // ── Phase 2: Grok full-video edit pass ───────────────────────────────────
