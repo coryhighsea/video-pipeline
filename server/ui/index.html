@@ -230,19 +230,11 @@
           <button class="btn-pick-transcript" onclick="document.getElementById('transcript-input').click()">Pick .txt</button>
         </div>
         <div class="transcript-row">
-          <label>Language:</label>
-          <select id="language-select" style="flex:1;background:#1e1e1e;border:1px solid #333;color:#9ca3af;border-radius:4px;padding:2px 6px;font-size:11px;">
-            <option value="auto">Auto-detect</option>
-            <option value="de">German (de)</option>
-            <option value="en">English (en)</option>
-          </select>
-        </div>
-        <div class="transcript-row">
           <label>Mode:</label>
           <select id="mode-select" style="flex:1;background:#1e1e1e;border:1px solid #333;color:#9ca3af;border-radius:4px;padding:2px 6px;font-size:11px;">
-            <option value="auto">Auto (clips / longform)</option>
-            <option value="transcribe">Transcript only</option>
             <option value="lecture">Lecture slides + PDF</option>
+            <option value="transcribe">Transcript only</option>
+            <option value="auto">Daily clips / longform</option>
           </select>
         </div>
         <div id="drop-zone" onclick="document.getElementById('file-input').click()">
@@ -458,7 +450,6 @@
       formData.append("video", videoFile);
       if (selectedTranscriptFile) formData.append("transcript", selectedTranscriptFile);
       formData.append("mode", document.getElementById("mode-select").value);
-      formData.append("language", document.getElementById("language-select").value);
 
       let jobId;
       try {
@@ -498,8 +489,7 @@
         transcriptInput.value = "";
         selectedTranscriptFile = null;
         document.getElementById("transcript-name").textContent = "No .txt selected";
-        document.getElementById("mode-select").value = "auto";
-        document.getElementById("language-select").value = "auto";
+        document.getElementById("mode-select").value = "lecture";
       }, 2000);
 
       await loadJobs();

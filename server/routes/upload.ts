@@ -40,8 +40,8 @@ app.post("/", async (c) => {
 
   // "mode" overrides: auto (default) | transcribe | lecture
   const modeField = formData.get("mode");
-  const languageRaw = formData.get("language");
-  const language = (typeof languageRaw === "string" && languageRaw !== "auto") ? languageRaw : null;
+  // Language is derived from mode: lectures are German, everything else is English
+  const language = modeField === "lecture" ? "de" : "en";
 
   const uuid = crypto.randomUUID();
   const videoExt = (videoFile as File).name.split(".").pop() ?? "mp4";
