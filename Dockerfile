@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     build-essential \
     ca-certificates \
+    postgresql-client \
     chromium \
     fonts-liberation \
     libatk-bridge2.0-0 \
