@@ -38,6 +38,8 @@ app.post("/", async (c) => {
   // Transcript is optional — if not provided, Grok analysis is skipped (job stays at analyzing)
   const hasTranscript = transcriptFile && typeof transcriptFile !== "string";
 
+  const transcribeOnly = formData.get("transcribeOnly") === "true";
+
   const uuid = crypto.randomUUID();
   const videoExt = (videoFile as File).name.split(".").pop() ?? "mp4";
   const videoFilename = `${uuid}.${videoExt}`;
@@ -86,7 +88,7 @@ app.post("/", async (c) => {
       id: uuid,
       originalFilename: (videoFile as File).name,
       uploadPath: `uploads/${videoFilename}`,
-      mode: hasTranscript ? "daily" : "longform",
+      mode: hasTranscript ? "daily" : transcribeOnly ? "transcribe" : "longform",
       geminiTranscriptPath: hasTranscript ? `uploads/${transcriptFilename}` : null,
       transcriptText: grokTranscript,
       status: "uploading",

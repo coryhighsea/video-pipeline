@@ -173,6 +173,23 @@ app.post("/:id/analyze", async (c) => {
   return c.json({ started: true });
 });
 
+// Download transcript as plain text (transcribe-only jobs)
+app.get("/:id/transcript", async (c) => {
+  const jobId = c.req.param("id");
+  const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
+  if (!job) return c.json({ error: "Not found" }, 404);
+  if (!job.transcriptText) return c.json({ error: "No transcript available yet" }, 404);
+
+  const baseName = job.originalFilename.replace(/\.[^.]+$/, "");
+  const filename = `${baseName}-transcript.txt`;
+  return new Response(job.transcriptText, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
+});
+
 // Delete job + all associated files from disk
 app.delete("/:id", async (c) => {
   const jobId = c.req.param("id");
