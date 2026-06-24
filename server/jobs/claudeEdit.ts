@@ -1,4 +1,4 @@
-import { createNvidia, NVIDIA_DEFAULT_MODEL } from "../lib/nvidia";
+import { createAnthropicProvider, ANTHROPIC_DEFAULT_MODEL } from "../lib/anthropic";
 import { generateObject } from "ai";
 import { z } from "zod";
 import path from "path";
@@ -79,12 +79,12 @@ export async function claudeEditFullVideo(params: {
 
   const segments: ClipSegment[] = [{ startMs: 0, endMs: durationMs }];
   const wordList = buildWordList(segments, captions);
-  const nvidia = createNvidia();
+  const anthropic = createAnthropicProvider();
 
   console.log(`[claudeEdit:longform-${jobId.slice(0, 8)}] Sending ${captions.length} words to gpt-oss for full-video edit...`);
 
   const { object } = await generateObject({
-    model: nvidia(NVIDIA_DEFAULT_MODEL),
+    model: anthropic(ANTHROPIC_DEFAULT_MODEL),
     schema: RemovalSchema,
     system: `You are a professional video editor for a NIS2 cybersecurity YouTube channel.
 You receive a word-by-word transcript of a 5–10 minute talking-head video with millisecond timestamps.
@@ -169,12 +169,12 @@ export async function claudeEditClip(params: {
   const totalSegmentMs = segments.reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
 
   const wordList = buildWordList(segments, captions);
-  const nvidia = createNvidia();
+  const anthropic = createAnthropicProvider();
 
   console.log(`[claudeEdit:${clipId.slice(0, 8)}] Sending ${captions.length} words to gpt-oss for edit decisions...`);
 
   const { object } = await generateObject({
-    model: nvidia(NVIDIA_DEFAULT_MODEL),
+    model: anthropic(ANTHROPIC_DEFAULT_MODEL),
     schema: RemovalSchema,
     system: `You are a professional video editor specialising in short-form social media clips (LinkedIn, YouTube Shorts).
 You receive a word-by-word transcript with millisecond timestamps, grouped by segment. Only pauses >500ms are shown — shorter gaps are normal breathing room and should NOT be cut.

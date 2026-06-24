@@ -1,4 +1,4 @@
-import { createNvidia, NVIDIA_DEFAULT_MODEL } from "../lib/nvidia";
+import { createAnthropicProvider, ANTHROPIC_DEFAULT_MODEL } from "../lib/anthropic";
 import { generateObject } from "ai";
 import { z } from "zod";
 import path from "path";
@@ -114,12 +114,12 @@ export async function runAnalysis(jobId: string): Promise<void> {
 
     emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Sending transcript to gpt-oss for clip suggestions..." });
 
-    const nvidia = createNvidia();
+    const anthropic = createAnthropicProvider();
 
     // ── Step 1: gpt-oss — clip suggestions ───────────────────────────────
     console.log("[analyze] Calling gpt-oss for clip suggestions...");
     const { object } = await generateObject({
-      model: nvidia(NVIDIA_DEFAULT_MODEL),
+      model: anthropic(ANTHROPIC_DEFAULT_MODEL),
       schema: ClipSuggestionSchema,
       system: `You are a video editor for a NIS2 cybersecurity compliance startup called NISD2.
 The founders (Simon and Cory) record their daily standup meetings and post the best moments as LinkedIn/YouTube Shorts.
