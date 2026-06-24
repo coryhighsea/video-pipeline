@@ -1,4 +1,4 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createNvidia, NVIDIA_DEFAULT_MODEL } from "../lib/nvidia";
 import { generateObject } from "ai";
 import { z } from "zod";
 import path from "path";
@@ -112,17 +112,14 @@ export async function runAnalysis(jobId: string): Promise<void> {
       console.log(`[analyze] Transcript length: ${transcriptText.length} chars`);
     }
 
-    emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Sending transcript to Claude for clip suggestions..." });
+    emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Sending transcript to gpt-oss for clip suggestions..." });
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY environment variable is not set");
+    const nvidia = createNvidia();
 
-    const anthropic = createAnthropic({ apiKey });
-
-    // ── Step 1: Claude — clip suggestions ────────────────────────────────
-    console.log("[analyze] Calling Claude for clip suggestions...");
+    // ── Step 1: gpt-oss — clip suggestions ───────────────────────────────
+    console.log("[analyze] Calling gpt-oss for clip suggestions...");
     const { object } = await generateObject({
-      model: anthropic("claude-opus-4-7"),
+      model: nvidia(NVIDIA_DEFAULT_MODEL),
       schema: ClipSuggestionSchema,
       system: `You are a video editor for a NIS2 cybersecurity compliance startup called NISD2.
 The founders (Simon and Cory) record their daily standup meetings and post the best moments as LinkedIn/YouTube Shorts.
@@ -155,8 +152,8 @@ Transcript:
 ${transcriptText}`,
     });
 
-    console.log(`[analyze] Claude returned ${object.clips.length} clip suggestions`);
-    emitJobEvent(jobId, { type: "progress", message: `Claude suggested ${object.clips.length} clips. Starting Whisper + edit pass...` });
+    console.log(`[analyze] gpt-oss returned ${object.clips.length} clip suggestions`);
+    emitJobEvent(jobId, { type: "progress", message: `gpt-oss suggested ${object.clips.length} clips. Starting Whisper + edit pass...` });
 
     // ── Step 2: Insert clips, then Whisper + Grok 2 per clip ─────────────
     const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
@@ -187,10 +184,10 @@ ${transcriptText}`,
         const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments, job.language);
         console.log(`[analyze] Clip ${i + 1}: Whisper returned ${captions.length} words`);
 
-        emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: Claude editing "${suggestion.title}"...` });
+        emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: gpt-oss editing "${suggestion.title}"...` });
 
-        // Claude edit — edit decisions using word-level captions + title + rationale
-        console.log(`[analyze] Clip ${i + 1}: calling Claude for edit decisions...`);
+        // gpt-oss edit — edit decisions using word-level captions + title + rationale
+        console.log(`[analyze] Clip ${i + 1}: calling gpt-oss for edit decisions...`);
         const { removedIntervals, outputFilename: gapEditedFilename } = await claudeEditClip({
           clipId,
           absInputPath: absVideoPath,
@@ -199,7 +196,7 @@ ${transcriptText}`,
           title: suggestion.title,
           rationale: suggestion.rationale,
         });
-        console.log(`[analyze] Clip ${i + 1}: Grok 2 flagged ${removedIntervals.length} intervals, ffmpeg cut complete`);
+        console.log(`[analyze] Clip ${i + 1}: edit pass flagged ${removedIntervals.length} intervals, ffmpeg cut complete`);
 
         // Caption remap — adjust timestamps to match gap-edited video (PTS 0)
         const structuralRemovals: { startMs: number; endMs: number }[] = [];
