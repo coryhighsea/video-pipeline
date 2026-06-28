@@ -16,7 +16,7 @@ export function createAnthropicProvider() {
   return createAnthropic({
     // The provider name is optional; we keep the default.
     apiKey,
-    // Anthropic API already uses JSON schema for structured output.
-    supportsStructuredOutputs: true,
+    // Anthropic already uses JSON schema for structured output natively —
+    // no provider flag needed.
   });
 }

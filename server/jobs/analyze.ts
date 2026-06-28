@@ -1,4 +1,4 @@
-import { createAnthropicProvider, ANTHROPIC_DEFAULT_MODEL } from "../lib/anthropic";
+import { getLlmModel, llmLabel } from "../lib/llm";
 import { generateObject } from "ai";
 import { z } from "zod";
 import path from "path";
@@ -12,6 +12,7 @@ import { claudeEditClip } from "./claudeEdit";
 import { remapCaptions } from "../lib/remapCaptions";
 import { runLongformAnalysis } from "./analyzeLongform";
 import { runLectureAnalysis } from "./analyzeLecture";
+import { runTightenAnalysis } from "./tightenSilence";
 
 const VIDEOS_DIR = path.join(import.meta.dir, "..", "..");
 const PUBLIC_DIR = path.join(VIDEOS_DIR, "public");
@@ -32,7 +33,7 @@ const ClipSuggestionSchema = z.object({
           .min(1)
           .max(4)
           .describe("1-4 time ranges to stitch together with hard cuts. Use multiple segments to combine a topic mentioned early and revisited later, or to skip dead air between two good moments."),
-        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 10 and 90."),
+        totalDurationSeconds: z.number().describe("Sum of all segment durations in seconds. Must be between 30 and 75, ideally 30-60."),
       })
     )
     .min(2)
@@ -89,6 +90,10 @@ export async function runAnalysis(jobId: string): Promise<void> {
     return runLectureAnalysis(jobId);
   }
 
+  if (job.mode === "tighten") {
+    return runTightenAnalysis(jobId);
+  }
+
   // Dispatch to longform pipeline when no transcript was uploaded
   if (job.mode === "longform") {
     return runLongformAnalysis(jobId);
@@ -112,14 +117,12 @@ export async function runAnalysis(jobId: string): Promise<void> {
       console.log(`[analyze] Transcript length: ${transcriptText.length} chars`);
     }
 
-    emitJobEvent(jobId, { type: "status", status: "analyzing", message: "Sending transcript to gpt-oss for clip suggestions..." });
+    emitJobEvent(jobId, { type: "status", status: "analyzing", message: `Sending transcript to ${llmLabel()} for clip suggestions...` });
 
-    const anthropic = createAnthropicProvider();
-
-    // ── Step 1: gpt-oss — clip suggestions ───────────────────────────────
-    console.log("[analyze] Calling gpt-oss for clip suggestions...");
+    // ── Step 1: clip suggestions ─────────────────────────────────────────
+    console.log(`[analyze] Calling ${llmLabel()} for clip suggestions...`);
     const { object } = await generateObject({
-      model: anthropic(ANTHROPIC_DEFAULT_MODEL),
+      model: getLlmModel(),
       schema: ClipSuggestionSchema,
       system: `You are a video editor for a NIS2 cybersecurity compliance startup called NISD2.
 The founders (Simon and Cory) record their daily standup meetings and post the best moments as LinkedIn/YouTube Shorts.
@@ -134,8 +137,9 @@ WHAT MAKES A GOOD CLIP:
 - Relatable founder struggles: stress, chaos, small wins
 
 HARD RULES:
-- totalDurationSeconds must be 10–90. It equals the sum of all segment durations, NOT wall-clock end-to-start.
-- Prefer clips that are naturally 15–45 seconds. Only go longer if the content genuinely requires it.
+- totalDurationSeconds must be 30–75, and should land in the 30–60 sweet spot. It equals the sum of all segment durations, NOT wall-clock end-to-start.
+- Target 30–60 seconds. This is enough time to set up the moment, deliver the point, and let it land — a stranger needs the surrounding context to actually understand what is being discussed. Clips under 30s almost always feel like they drop you mid-thought, so DO NOT cut that short.
+- Include the lead-in that frames the moment and the follow-through that completes the thought — err on the side of MORE context rather than a tight quote with no setup.
 - Each segment starts and ends at complete sentence boundaries.
 - The clip must be self-contained — a stranger should understand it with no prior context.
 - Use multiple segments to: stitch a topic mentioned early with its conclusion later, skip logistical filler between two strong moments, combine a question and its answer separated by tangents.
@@ -145,8 +149,8 @@ HARD RULES:
 Timestamps format: [M:SS = Nms] — use the ms value for startMs/endMs.
 Timestamps appear every ~1 minute and are approximate (±30s accuracy).
 
-Identify 2-5 clips for LinkedIn/YouTube Shorts.
-Verify totalDurationSeconds = sum((endMs-startMs)/1000) for all segments before returning.
+Identify 2-5 clips for LinkedIn/YouTube Shorts. Aim for 30–60 seconds each — long enough to hold context and explain what is happening, never a tight quote that drops the viewer mid-thought.
+Verify totalDurationSeconds = sum((endMs-startMs)/1000) for all segments and that it is in the 30–75 range before returning.
 ${job.customContext ? `\nAdditional context from the editor:\n${job.customContext}\n` : ""}
 Transcript:
 ${transcriptText}`,

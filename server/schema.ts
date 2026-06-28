@@ -36,7 +36,7 @@ export const jobs = pgTable("jobs", {
   videoDurationMs: integer("video_duration_ms"),
 
   // Gemini transcript (uploaded alongside video)
-  mode: text("mode").notNull().default("daily"), // "daily" | "longform"
+  mode: text("mode").notNull().default("daily"), // "daily" | "longform" | "lecture" | "transcribe" | "tighten"
 
   // Gemini transcript (uploaded alongside video, daily mode only)
   geminiTranscriptPath: text("gemini_transcript_path"),

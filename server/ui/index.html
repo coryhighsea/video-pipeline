@@ -154,6 +154,7 @@
     .badge-daily { background: #1a2a3a; color: #67e8f9; }
     .badge-transcribe { background: #1a2a1a; color: #86efac; }
     .badge-lecture { background: #1a1a3a; color: #a5b4fc; }
+    .badge-tighten { background: #2a1a1a; color: #fca5a5; }
 
     /* Transcribe-only toggle */
     .transcribe-row { margin-top: 8px; display: flex; align-items: center; gap: 6px; }
@@ -233,6 +234,7 @@
           <label>Mode:</label>
           <select id="mode-select" style="flex:1;background:#1e1e1e;border:1px solid #333;color:#9ca3af;border-radius:4px;padding:2px 6px;font-size:11px;">
             <option value="auto" selected>Daily clips / longform</option>
+            <option value="tighten">Tighten — cut air-gaps (raw cut)</option>
             <option value="lecture">Lecture slides + PDF</option>
             <option value="transcribe">Transcript only</option>
           </select>
@@ -322,6 +324,8 @@
     function statusSteps(status, mode) {
       const steps = mode === "transcribe"
         ? [["uploading", "Upload"], ["analyzing", "Transcribe"], ["done", "Done"]]
+        : mode === "tighten"
+        ? [["uploading", "Upload"], ["analyzing", "Detect gaps · Cut · Transcribe"], ["done", "Done"]]
         : mode === "lecture"
         ? [["uploading", "Upload"], ["analyzing", "Transcribe · Slides · PDF"], ["done", "Done"]]
         : [
@@ -518,7 +522,7 @@
           <div class="job-name">${escHtml(j.originalFilename)}</div>
           <div class="job-meta">
             <span class="badge badge-${j.status}">${j.status.replace(/_/g," ")}</span>
-            <span class="badge badge-${j.mode || 'daily'}">${j.mode === 'longform' ? '16:9' : j.mode === 'transcribe' ? 'txt' : j.mode === 'lecture' ? 'slides' : 'daily'}</span>
+            <span class="badge badge-${j.mode || 'daily'}">${j.mode === 'longform' ? '16:9' : j.mode === 'transcribe' ? 'txt' : j.mode === 'lecture' ? 'slides' : j.mode === 'tighten' ? 'cut' : 'daily'}</span>
             <span>${new Date(j.createdAt).toLocaleDateString()}</span>
             <button class="btn-delete-job" onclick="deleteJob(event, '${j.id}')" title="Delete job and files">✕</button>
           </div>
@@ -569,6 +573,8 @@
       const detail = document.getElementById("detail");
       if (job.mode === "transcribe") {
         renderDetailTranscribe(job, detail);
+      } else if (job.mode === "tighten") {
+        renderDetailTighten(job, detail);
       } else if (job.mode === "lecture") {
         renderDetailLecture(job, detail);
       } else if (job.mode === "longform") {
@@ -596,6 +602,41 @@
           </div>
         ` : isAnalyzing ? `
           <div style="color:#60a5fa;font-size:13px;padding:16px 0;">Running Whisper transcription... This may take a few minutes.</div>
+        ` : `
+          <div style="color:#f87171;font-size:13px;padding:16px 0;">Error: ${escHtml(job.errorMessage || "Unknown error")}</div>
+        `}
+
+        <details class="log-section" style="margin-top:20px;">
+          <summary>Log output</summary>
+          <div class="log-box" id="log-box"></div>
+        </details>
+
+        <div style="margin-top:20px;">
+          <button class="btn btn-reject" style="font-size:12px;padding:6px 14px;" onclick="deleteJob(null, '${job.id}')">Delete job</button>
+        </div>
+      `;
+    }
+
+    function renderDetailTighten(job, detail) {
+      const isDone = job.status === "done";
+      const isAnalyzing = job.status === "analyzing" || job.status === "uploading";
+      detail.innerHTML = `
+        <div class="status-bar">
+          <div class="status-steps">${statusSteps(job.status, job.mode)}</div>
+          <div class="job-title" title="${escHtml(job.originalFilename)}">${escHtml(job.originalFilename)}</div>
+        </div>
+
+        ${isDone ? `
+          <div class="transcript-card">
+            <p>Air-gaps cut — ready for DaVinci Resolve.</p>
+            ${job.outputPath ? `
+              <video src="/${escHtml(job.outputPath)}" controls style="width:100%;max-height:360px;border-radius:8px;margin:8px 0;background:#000;"></video>
+              <a class="btn-download-transcript" href="/${escHtml(job.outputPath)}" download>↓ Download tightened video (.mp4)</a>
+            ` : ""}
+            <a class="btn-download-transcript" href="/api/jobs/${job.id}/transcript" download style="margin-left:8px;">↓ Download transcript (.txt)</a>
+          </div>
+        ` : isAnalyzing ? `
+          <div style="color:#60a5fa;font-size:13px;padding:16px 0;">Detecting air-gaps and cutting... then Whisper transcription. This may take a few minutes.</div>
         ` : `
           <div style="color:#f87171;font-size:13px;padding:16px 0;">Error: ${escHtml(job.errorMessage || "Unknown error")}</div>
         `}

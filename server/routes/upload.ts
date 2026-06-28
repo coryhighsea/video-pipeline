@@ -38,7 +38,7 @@ app.post("/", async (c) => {
   // Transcript is optional — if not provided, Grok analysis is skipped (job stays at analyzing)
   const hasTranscript = transcriptFile && typeof transcriptFile !== "string";
 
-  // "mode" overrides: auto (default) | transcribe | lecture
+  // "mode" overrides: auto (default) | transcribe | lecture | tighten
   const modeField = formData.get("mode");
   // Language: explicit field from UI, fallback to "en"
   const langField = formData.get("language");
@@ -94,6 +94,7 @@ app.post("/", async (c) => {
       uploadPath: `uploads/${videoFilename}`,
       mode: modeField === "transcribe" ? "transcribe"
           : modeField === "lecture"    ? "lecture"
+          : modeField === "tighten"    ? "tighten"
           : hasTranscript              ? "daily"
           : "longform",
       language,
