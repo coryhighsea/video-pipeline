@@ -34,3 +34,27 @@ export function llmLabel(): string {
     ? `Anthropic (${ANTHROPIC_DEFAULT_MODEL})`
     : `NVIDIA (${NVIDIA_DEFAULT_MODEL})`;
 }
+
+/**
+ * Fallback model used only when the primary provider fails outright.
+ *
+ * NVIDIA's hosted gpt-oss endpoint is free and air-gappable but unreliable — it
+ * regularly times out even on tiny requests. When it does, we'd rather complete
+ * the job on Claude than fail. So when the primary is NVIDIA and an Anthropic key
+ * is present, Claude is the safety net. This does NOT change the happy path:
+ * gpt-oss still handles every request that succeeds. Set LLM_FALLBACK=off to
+ * disable (fully air-gapped mode).
+ */
+export function getFallbackModel(): { model: LanguageModel; label: string } | null {
+  if (process.env.LLM_FALLBACK === "off") return null;
+  if (LLM_PROVIDER !== "nvidia") return null; // only NVIDIA needs rescuing
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const anthropic = createAnthropicProvider();
+  return { model: anthropic(ANTHROPIC_DEFAULT_MODEL), label: `Anthropic (${ANTHROPIC_DEFAULT_MODEL})` };
+}
+
+/** Spreadable fallback args for generateObjectWithTimeout call sites. */
+export function fallbackArgs(): { fallbackModel?: LanguageModel; fallbackLabel?: string } {
+  const fb = getFallbackModel();
+  return fb ? { fallbackModel: fb.model, fallbackLabel: fb.label } : {};
+}

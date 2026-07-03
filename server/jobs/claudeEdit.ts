@@ -1,5 +1,5 @@
-import { getLlmModel } from "../lib/llm";
-import { generateObject } from "ai";
+import { getLlmModel, fallbackArgs } from "../lib/llm";
+import { generateObjectWithTimeout } from "../lib/generateWithRetry";
 import { z } from "zod";
 import path from "path";
 import { execSync } from "child_process";
@@ -82,9 +82,13 @@ export async function claudeEditFullVideo(params: {
 
   console.log(`[claudeEdit:longform-${jobId.slice(0, 8)}] Sending ${captions.length} words to LLM for full-video edit...`);
 
-  const { object } = await generateObject({
+  const { object } = await generateObjectWithTimeout({
     model: getLlmModel(),
     schema: RemovalSchema,
+    timeoutMs: 90_000,
+    ...fallbackArgs(),
+    onRetry: (attempt, reason) => console.warn(`[claudeEdit:longform-${jobId.slice(0, 8)}] edit attempt ${attempt} failed (${reason}) — retrying...`),
+    onFallback: (label, reason) => console.warn(`[claudeEdit:longform-${jobId.slice(0, 8)}] falling back to ${label} (${reason})`),
     system: `You are a professional video editor for a NIS2 cybersecurity YouTube channel.
 You receive a word-by-word transcript of a 5–10 minute talking-head video with millisecond timestamps.
 Your job: return the millisecond intervals to cut to produce a clean, tight YouTube video.
@@ -171,9 +175,13 @@ export async function claudeEditClip(params: {
 
   console.log(`[claudeEdit:${clipId.slice(0, 8)}] Sending ${captions.length} words to LLM for edit decisions...`);
 
-  const { object } = await generateObject({
+  const { object } = await generateObjectWithTimeout({
     model: getLlmModel(),
     schema: RemovalSchema,
+    timeoutMs: 90_000,
+    ...fallbackArgs(),
+    onRetry: (attempt, reason) => console.warn(`[claudeEdit:${clipId.slice(0, 8)}] edit attempt ${attempt} failed (${reason}) — retrying...`),
+    onFallback: (label, reason) => console.warn(`[claudeEdit:${clipId.slice(0, 8)}] falling back to ${label} (${reason})`),
     system: `You are a professional video editor specialising in short-form social media clips (LinkedIn, YouTube Shorts).
 You receive a word-by-word transcript with millisecond timestamps, grouped by segment. Only pauses >500ms are shown — shorter gaps are normal breathing room and should NOT be cut.
 Your job: return the exact millisecond intervals to cut to produce a clean, natural-sounding clip.

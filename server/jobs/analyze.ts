@@ -1,5 +1,4 @@
-import { getLlmModel, llmLabel } from "../lib/llm";
-import { generateObject } from "ai";
+import { getLlmModel, llmLabel, fallbackArgs } from "../lib/llm";
 import { z } from "zod";
 import path from "path";
 import fs from "fs";
@@ -7,7 +6,8 @@ import { db } from "../db";
 import { jobs, clips } from "../schema";
 import { eq } from "drizzle-orm";
 import { emitJobEvent } from "./queue";
-import { transcribeClipSegments, transcribeFullVideo, buildTranscriptFromCaptions } from "./transcribeClip";
+import { transcribeClipSegments, transcribeFullVideo, buildTranscriptFromCaptions, getVideoDurationMs } from "./transcribeClip";
+import { generateObjectWithTimeout } from "../lib/generateWithRetry";
 import { claudeEditClip } from "./claudeEdit";
 import { remapCaptions } from "../lib/remapCaptions";
 import { runLongformAnalysis } from "./analyzeLongform";
@@ -16,6 +16,41 @@ import { runTightenAnalysis } from "./tightenSilence";
 
 const VIDEOS_DIR = path.join(import.meta.dir, "..", "..");
 const PUBLIC_DIR = path.join(VIDEOS_DIR, "public");
+
+/** Clip-length guarantees. gpt-oss ignores the duration target and returns
+ * 15-20s single-sentence clips; grammar-constrained decoding won't enforce a
+ * numeric range and reasoning is off, so we enforce length in code instead of
+ * trusting the model. Short clips get their outer boundaries widened toward the
+ * target; the downstream Whisper + edit pass tightens them back and a human
+ * approves in review, so erring generous is safe. */
+const MIN_CLIP_MS = 30_000;
+const TARGET_CLIP_MS = 45_000;
+
+/**
+ * Widen a too-short clip's outer boundaries toward TARGET_CLIP_MS. Extends the
+ * last segment forward (follow-through) first, then the first segment backward
+ * (lead-in), clamped to [0, videoDurationMs]. Inner segments are untouched, and
+ * since we only push the outermost edges away from the clip's interior, segments
+ * can't overlap. Returns segments unchanged if already at/above MIN_CLIP_MS.
+ */
+function padShortClip(segments: { startMs: number; endMs: number }[], videoDurationMs: number): { startMs: number; endMs: number }[] {
+  const segs = segments.map((s) => ({ ...s })).sort((a, b) => a.startMs - b.startMs);
+  const total = segs.reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
+  if (total >= MIN_CLIP_MS) return segs;
+
+  let need = TARGET_CLIP_MS - total;
+  const last = segs[segs.length - 1];
+  const addAfter = Math.min(need, Math.max(0, videoDurationMs - last.endMs));
+  last.endMs += addAfter;
+  need -= addAfter;
+
+  if (need > 0) {
+    const first = segs[0];
+    const addBefore = Math.min(need, Math.max(0, first.startMs));
+    first.startMs -= addBefore;
+  }
+  return segs;
+}
 
 const SegmentSchema = z.object({
   startMs: z.number().describe("Start time in milliseconds, at a sentence boundary. Use the nearest [M:SS = Nms] marker plus estimated offset."),
@@ -121,9 +156,19 @@ export async function runAnalysis(jobId: string): Promise<void> {
 
     // ── Step 1: clip suggestions ─────────────────────────────────────────
     console.log(`[analyze] Calling ${llmLabel()} for clip suggestions...`);
-    const { object } = await generateObject({
+    const { object } = await generateObjectWithTimeout({
       model: getLlmModel(),
       schema: ClipSuggestionSchema,
+      timeoutMs: 150_000,
+      ...fallbackArgs(),
+      onRetry: (attempt, reason) => {
+        console.warn(`[analyze] clip-suggestion attempt ${attempt} failed (${reason}) — retrying...`);
+        emitJobEvent(jobId, { type: "progress", message: `${llmLabel()} slow to respond (${reason}), retrying...` });
+      },
+      onFallback: (label, reason) => {
+        console.warn(`[analyze] clip-suggestion falling back to ${label} (${reason})`);
+        emitJobEvent(jobId, { type: "progress", message: `${llmLabel()} unavailable (${reason}) — falling back to ${label}...` });
+      },
       system: `You are a video editor for a NIS2 cybersecurity compliance startup called NISD2.
 The founders (Simon and Cory) record their daily standup meetings and post the best moments as LinkedIn/YouTube Shorts.
 Their audience is IT managers, CISOs, and business owners in EU companies who need to comply with NIS2.
@@ -149,23 +194,44 @@ HARD RULES:
 Timestamps format: [M:SS = Nms] — use the ms value for startMs/endMs.
 Timestamps appear every ~1 minute and are approximate (±30s accuracy).
 
-Identify 2-5 clips for LinkedIn/YouTube Shorts. Aim for 30–60 seconds each — long enough to hold context and explain what is happening, never a tight quote that drops the viewer mid-thought.
+Identify 4-5 distinct clips for LinkedIn/YouTube Shorts (only drop below 4 if the video genuinely lacks enough strong moments). Aim for 30–60 seconds each — long enough to hold context and explain what is happening, never a tight quote that drops the viewer mid-thought.
 Verify totalDurationSeconds = sum((endMs-startMs)/1000) for all segments and that it is in the 30–75 range before returning.
+Every entry in "clips" must be a real, playable clip with endMs > startMs on every segment. Do NOT add a summary, recap, "overall total", or aggregate entry, and never emit a segment of 0:00→0:00.
 ${job.customContext ? `\nAdditional context from the editor:\n${job.customContext}\n` : ""}
 Transcript:
 ${transcriptText}`,
     });
 
-    console.log(`[analyze] gpt-oss returned ${object.clips.length} clip suggestions`);
-    emitJobEvent(jobId, { type: "progress", message: `gpt-oss suggested ${object.clips.length} clips. Starting Whisper + edit pass...` });
+    // Drop degenerate / hallucinated entries (e.g. an "Overall total" summary row
+    // with 0:00→0:00 segments). Keep only clips with real, positive-duration segments.
+    const suggestedClips = object.clips.filter((c) => {
+      const totalMs = c.segments.reduce((sum, s) => sum + Math.max(0, s.endMs - s.startMs), 0);
+      return c.segments.some((s) => s.endMs > s.startMs) && totalMs >= 5000;
+    });
+    const dropped = object.clips.length - suggestedClips.length;
+    if (dropped > 0) console.log(`[analyze] Dropped ${dropped} degenerate clip suggestion(s)`);
+
+    console.log(`[analyze] ${llmLabel()} returned ${suggestedClips.length} usable clip suggestions`);
+    emitJobEvent(jobId, { type: "progress", message: `Suggested ${suggestedClips.length} clips. Starting Whisper + edit pass...` });
 
     // ── Step 2: Insert clips, then Whisper + Grok 2 per clip ─────────────
     const absVideoPath = path.join(VIDEOS_DIR, job.uploadPath);
+    const videoDurationMs = getVideoDurationMs(absVideoPath);
     const now = new Date();
 
-    for (let i = 0; i < object.clips.length; i++) {
-      const suggestion = object.clips[i];
+    for (let i = 0; i < suggestedClips.length; i++) {
+      const suggestion = suggestedClips[i];
       const clipId = crypto.randomUUID();
+
+      // gpt-oss routinely returns 15-20s clips despite the 30-60s target — widen
+      // short ones toward the target so viewers get the setup + payoff, not a
+      // mid-thought quote. No-op for clips already at length.
+      const rawTotal = suggestion.segments.reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
+      suggestion.segments = padShortClip(suggestion.segments, videoDurationMs);
+      const paddedTotal = suggestion.segments.reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
+      if (paddedTotal > rawTotal) {
+        console.log(`[analyze] Clip ${i + 1}: padded ${Math.round(rawTotal / 1000)}s → ${Math.round(paddedTotal / 1000)}s`);
+      }
 
       await db.insert(clips).values({
         id: clipId,
@@ -179,8 +245,8 @@ ${transcriptText}`,
         updatedAt: now,
       });
 
-      console.log(`[analyze] Clip ${i + 1}/${object.clips.length}: "${suggestion.title}"`);
-      emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: transcribing "${suggestion.title}"...` });
+      console.log(`[analyze] Clip ${i + 1}/${suggestedClips.length}: "${suggestion.title}"`);
+      emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${suggestedClips.length}: transcribing "${suggestion.title}"...` });
 
       try {
         // Whisper — word-level timestamps for this clip's segments
@@ -188,7 +254,7 @@ ${transcriptText}`,
         const { captions } = await transcribeClipSegments(clipId, absVideoPath, suggestion.segments, job.language);
         console.log(`[analyze] Clip ${i + 1}: Whisper returned ${captions.length} words`);
 
-        emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${object.clips.length}: gpt-oss editing "${suggestion.title}"...` });
+        emitJobEvent(jobId, { type: "progress", message: `Clip ${i + 1}/${suggestedClips.length}: gpt-oss editing "${suggestion.title}"...` });
 
         // gpt-oss edit — edit decisions using word-level captions + title + rationale
         console.log(`[analyze] Clip ${i + 1}: calling gpt-oss for edit decisions...`);
@@ -223,7 +289,7 @@ ${transcriptText}`,
           updatedAt: new Date(),
         }).where(eq(clips.id, clipId));
 
-        emitJobEvent(jobId, { type: "progress", message: `✓ Clip ${i + 1}/${object.clips.length}: "${suggestion.title}" ready` });
+        emitJobEvent(jobId, { type: "progress", message: `✓ Clip ${i + 1}/${suggestedClips.length}: "${suggestion.title}" ready` });
 
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -241,7 +307,7 @@ ${transcriptText}`,
     emitJobEvent(jobId, {
       type: "status",
       status: "stage1_review",
-      message: `Analysis complete. ${object.clips.length} clips ready for review.`,
+      message: `Analysis complete. ${suggestedClips.length} clips ready for review.`,
     });
 
   } catch (err) {

@@ -8,6 +8,10 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
  * openai/gpt-oss-120b — a reasoning MoE that supports structured output
  * (response_format / guided_json), which generateObject relies on.
  *
+ * NOTE: meta/llama-3.3-70b-instruct and meta/llama-3.1-70b-instruct are listed
+ * in the catalog but currently time out / cold-start very slowly on this key,
+ * so they are not viable for the analyze step. gpt-oss-120b responds in ~1.5s.
+ *
  * Override the model per call site if needed; override the whole default
  * via NVIDIA_MODEL.
  */
