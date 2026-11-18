@@ -17,7 +17,7 @@ export type SendResult =
   | { status: "skipped"; error: string }
   | { status: "failed"; error: string };
 
-export async function sendLeadMagnet(to: string): Promise<SendResult> {
+export async function sendLeadMagnet(to: string, name: string | null): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) {
@@ -30,7 +30,7 @@ export async function sendLeadMagnet(to: string): Promise<SendResult> {
       to,
       replyTo: process.env.EMAIL_REPLY_TO || undefined,
       subject: email.subject,
-      html: email.html,
+      html: email.html(name),
       attachments: [{ filename: site.pdfFilename, content: await pdf() }],
     });
     if (error || !data) return { status: "failed", error: error?.message ?? "No response from Resend" };

@@ -16,6 +16,7 @@ export default function LeadForm({ cta }: { cta: string }) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const payload = {
+      name: String(form.get("name") ?? ""),
       email: String(form.get("email") ?? ""),
       phone: String(form.get("phone") ?? ""),
       company: String(form.get("company") ?? ""),
@@ -52,6 +53,12 @@ export default function LeadForm({ cta }: { cta: string }) {
 
   return (
     <form onSubmit={onSubmit} noValidate>
+      <label>
+        <span>
+          First name <span className="opt">(optional)</span>
+        </span>
+        <input name="name" type="text" autoComplete="given-name" maxLength={100} placeholder="Alex" />
+      </label>
       <label>
         Email
         <input name="email" type="email" autoComplete="email" required placeholder="you@company.com" />

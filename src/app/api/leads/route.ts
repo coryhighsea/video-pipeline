@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Too many requests. Please try again in a few minutes." }, { status: 429 });
   }
 
-  let body: { email?: unknown; phone?: unknown; company?: unknown };
+  let body: { name?: unknown; email?: unknown; phone?: unknown; company?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -50,24 +50,33 @@ export async function POST(req: Request) {
     return Response.json({ error: "Please enter a valid phone number, or leave it blank." }, { status: 400 });
   }
   const phone = phoneRaw || null;
+  const nameRaw = typeof body.name === "string" ? body.name.trim().replace(/\s+/g, " ") : "";
+  if (nameRaw.length > 100) {
+    return Response.json({ error: "Please enter a shorter name." }, { status: 400 });
+  }
+  const name = nameRaw || null;
 
   const { visitorId, variant } = await currentVisitor();
 
   // First signup keeps its original variant (that's the conversion we count);
   // repeat requests just update the phone and resend.
   const lead = db()
-    .query<{ id: number; request_count: number }, [string, string | null, string | null, string, string]>(
-      `INSERT INTO leads (email, phone, visitor_id, experiment_id, variant)
-       VALUES (?, ?, ?, ?, ?)
+    .query<
+      { id: number; request_count: number; name: string | null },
+      [string, string | null, string | null, string | null, string, string]
+    >(
+      `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(email) DO UPDATE SET
+         name = COALESCE(excluded.name, leads.name),
          phone = COALESCE(excluded.phone, leads.phone),
          request_count = leads.request_count + 1,
          updated_at = datetime('now')
-       RETURNING id, request_count`,
+       RETURNING id, request_count, name`,
     )
-    .get(email, phone, visitorId, experiment.id, variant.id)!;
+    .get(email, name, phone, visitorId, experiment.id, variant.id)!;
 
-  const result = await sendLeadMagnet(email);
+  const result = await sendLeadMagnet(email, lead.name);
   db()
     .query("UPDATE leads SET email_status = ?, email_id = ?, email_error = ? WHERE id = ?")
     .run(
@@ -81,6 +90,7 @@ export async function POST(req: Request) {
     leadId: lead.id,
     repeat: lead.request_count > 1,
     variant: variant.id,
+    hasName: Boolean(name),
     hasPhone: Boolean(phone),
     emailStatus: result.status,
     ...(result.status !== "sent" && { emailError: result.error }),

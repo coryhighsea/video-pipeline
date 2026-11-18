@@ -61,10 +61,13 @@ export const experiment: { id: string; variants: Variant[] } = {
   ],
 };
 
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
 export const email = {
   subject: `Your copy of ${site.magnetTitle}`,
-  html: `
-    <p>Hi there,</p>
+  html: (name: string | null) => `
+    <p>Hi ${name ? escapeHtml(name) : "there"},</p>
     <p>Thanks for requesting <strong>${site.magnetTitle}</strong>. It's attached to this email.</p>
     <p>If you have questions, just reply. A real person reads every message.</p>
     <p>— ${site.brand}</p>

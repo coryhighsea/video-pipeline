@@ -36,6 +36,11 @@ function open(): Database {
     CREATE INDEX IF NOT EXISTS leads_experiment ON leads (experiment_id, variant);
     CREATE INDEX IF NOT EXISTS leads_created ON leads (created_at);
   `);
+
+  // Additive migrations for databases created by earlier versions.
+  const leadCols = new Set(db.query<{ name: string }, []>("PRAGMA table_info(leads)").all().map((c) => c.name));
+  if (!leadCols.has("name")) db.run("ALTER TABLE leads ADD COLUMN name TEXT");
+
   return db;
 }
 

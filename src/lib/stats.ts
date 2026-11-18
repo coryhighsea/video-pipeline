@@ -89,6 +89,7 @@ export function dailyLeads(days = 30): { day: string; n: number }[] {
 export type LeadRow = {
   id: number;
   email: string;
+  name: string | null;
   phone: string | null;
   experiment_id: string | null;
   variant: string | null;
@@ -101,7 +102,7 @@ export type LeadRow = {
 export function recentLeads(limit = 50): LeadRow[] {
   return db()
     .query<LeadRow, [number]>(
-      `SELECT id, email, phone, experiment_id, variant, request_count, email_status, email_error, created_at
+      `SELECT id, email, name, phone, experiment_id, variant, request_count, email_status, email_error, created_at
        FROM leads ORDER BY id DESC LIMIT ?`,
     )
     .all(limit);

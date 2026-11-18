@@ -79,6 +79,7 @@ export default function Admin() {
           <thead>
             <tr>
               <th>Signed up (UTC)</th>
+              <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
               <th>Variant</th>
@@ -89,12 +90,13 @@ export default function Admin() {
           <tbody>
             {leads.length === 0 && (
               <tr>
-                <td colSpan={6}>No leads yet.</td>
+                <td colSpan={7}>No leads yet.</td>
               </tr>
             )}
             {leads.map((l) => (
               <tr key={l.id}>
                 <td>{l.created_at}</td>
+                <td>{l.name ?? "—"}</td>
                 <td>{l.email}</td>
                 <td>{l.phone ?? "—"}</td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
