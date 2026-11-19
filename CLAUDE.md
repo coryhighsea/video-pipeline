@@ -22,7 +22,7 @@ bun run typecheck   # must pass with zero errors
 - `src/proxy.ts`: assigns the `vid` (visitor) and `abv` (`experimentId:variantId`) cookies on `/`, and applies HTTP basic auth to `/admin`.
 - `src/lib/db.ts`: SQLite at `$DATA_DIR/funnel.sqlite`; schema is created on boot (`visits`, `leads`).
 - `src/app/api/track`: unique view per visitor per experiment (the client fires it on mount).
-- `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Includes a honeypot field (`company`) and an in-memory IP rate limit.
+- `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Includes a honeypot field (`hp_x`, deliberately meaningless so autofill skips it) and an in-memory IP rate limit.
 - `src/app/admin`: dashboard (totals, conversion per variant with lift and p-value, leads per day, recent leads) plus `/admin/leads.csv`.
 - `src/app/api/health`: DB ping, used by the Docker `HEALTHCHECK`.
 - Logs are JSON lines on stdout (`lead.created`, `lead.honeypot`).

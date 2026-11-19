@@ -19,7 +19,7 @@ export default function LeadForm({ cta }: { cta: string }) {
       name: String(form.get("name") ?? ""),
       email: String(form.get("email") ?? ""),
       phone: String(form.get("phone") ?? ""),
-      company: String(form.get("company") ?? ""),
+      hp_x: String(form.get("hp_x") ?? ""),
     };
     setState("sending");
     setError(null);
@@ -69,11 +69,19 @@ export default function LeadForm({ cta }: { cta: string }) {
         </span>
         <input name="phone" type="tel" autoComplete="tel" placeholder="+1 555 123 4567" />
       </label>
+      {/* Bot trap. No label and a meaningless name so browsers and password managers don't autofill it. */}
       <div className="hp" aria-hidden>
-        <label>
-          Company
-          <input name="company" tabIndex={-1} autoComplete="off" />
-        </label>
+        <input
+          name="hp_x"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore
+          data-form-type="other"
+          defaultValue=""
+        />
       </div>
       {error && (
         <p className="error" role="alert">

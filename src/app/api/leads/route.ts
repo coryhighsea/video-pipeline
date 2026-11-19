@@ -9,35 +9,42 @@ export const dynamic = "force-dynamic";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^\+?[0-9\s().-]{7,20}$/;
 
-// Simple in-memory rate limit: 5 requests per IP per 10 minutes.
+// Simple in-memory rate limit: 10 accepted requests per IP per 10 minutes.
+// Rejected attempts don't count, so retrying after a block doesn't extend it.
 const WINDOW_MS = 10 * 60 * 1000;
-const MAX_HITS = 5;
+const MAX_HITS = 10;
 const hits = new Map<string, number[]>();
 function rateLimited(ip: string): boolean {
   const now = Date.now();
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
+  if (hits.size > 10_000) hits.clear();
+  if (recent.length >= MAX_HITS) {
+    hits.set(ip, recent);
+    return true;
+  }
   recent.push(now);
   hits.set(ip, recent);
-  if (hits.size > 10_000) hits.clear();
-  return recent.length > MAX_HITS;
+  return false;
 }
 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   if (rateLimited(ip)) {
+    log("warn", "lead.rate_limited", { ip });
     return Response.json({ error: "Too many requests. Please try again in a few minutes." }, { status: 429 });
   }
 
-  let body: { name?: unknown; email?: unknown; phone?: unknown; company?: unknown };
+  let body: { name?: unknown; email?: unknown; phone?: unknown; hp_x?: unknown };
   try {
     body = await req.json();
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  // Honeypot: real users never see or fill the "company" field.
-  if (typeof body.company === "string" && body.company.trim() !== "") {
-    log("warn", "lead.honeypot", { ip });
+  // Honeypot: a hidden field with a meaningless name so browser autofill leaves it alone.
+  // Bots get a fake success. The email is logged so any false positive can be recovered.
+  if (typeof body.hp_x === "string" && body.hp_x.trim() !== "") {
+    log("warn", "lead.honeypot", { ip, email: typeof body.email === "string" ? body.email : null });
     return Response.json({ ok: true });
   }
 
