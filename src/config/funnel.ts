@@ -15,7 +15,7 @@ export const highlights = [
   },
   {
     title: "Real costs and real timelines",
-    body: "What we actually paid (about €650 in notary, court and registration fees), why the starting capital stays yours, and why it took about two months before we could send our first invoice.",
+    body: "What we actually paid (about €650 in notary, court and registration fees), why the starting capital stays yours, and why it took about four months before we could send our first invoice.",
   },
   {
     title: "The VAT decision to make before you start",

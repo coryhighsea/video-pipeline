@@ -11,7 +11,7 @@ Lead magnet #1 for the Side Hustle Germany email list.
 
 ## Core summary (use anywhere)
 
-> Registering a company in Germany is nothing like back home. My co-founder and I are two Canadians who went through the whole thing: the Musterprotokoll, an online notary, the Handelsregister, the Gewerbeamt and the Finanzamt. It took about two months before we could legally send an invoice, and about €650 in fees.
+> Registering a company in Germany is nothing like back home. My co-founder and I are two Canadians who went through the whole thing: the Musterprotokoll, an online notary, the Handelsregister, the Gewerbeamt and the Finanzamt. It took about four months before we could legally send an invoice, and about €650 in fees.
 >
 > I turned it into the checklist I wish I'd had: every step in order, what it cost, how long it took, and the VAT decision you should make before you start. Free, in plain English.
 
@@ -34,7 +34,7 @@ Registering a company in Germany: 👇
 9. Finanzamt questionnaire, then more documents, then more waiting
 10. Finally: a tax number and your first invoice
 
-About two months, start to finish. And that's before the big question: Kleinunternehmer (VAT exempt) or not?
+About four months, start to finish. And that's before the big question: Kleinunternehmer (VAT exempt) or not?
 
 I wrote it all down, every step, cost and mistake to avoid, as the checklist I wish I'd had when we started.
 
@@ -42,7 +42,7 @@ If you're thinking about starting a side hustle in Germany, grab it free: [LINK]
 
 ## Short post (X / Threads / Reddit-style)
 
-Two Canadians registered a company in Germany. It took ~2 months, ~€650 in fees, a notary, a court, and the Finanzamt asking for "just one more document."
+Two Canadians registered a company in Germany. It took ~4 months, ~€650 in fees, a notary, a court, and the Finanzamt asking for "just one more document."
 
 I turned it into a free step-by-step checklist so you don't have to figure it out from scratch: [LINK]
 
@@ -69,13 +69,13 @@ I put every step, cost and timeline into one free checklist. Link in bio.
 - CTA button: Download
 
 **Version 2 (story)**
-- Primary text: Registering a company in Canada takes a few clicks. In Germany it took us two months, a notary, a court and a lot of paperwork. I wrote down every step so you don't have to figure it out alone. Free checklist for anyone starting a side hustle in Germany.
+- Primary text: Registering a company in Canada takes a few clicks. In Germany it took us four months, a notary, a court and a lot of paperwork. I wrote down every step so you don't have to figure it out alone. Free checklist for anyone starting a side hustle in Germany.
 - Headline: The Checklist I Wish I'd Had
 - Description: Free PDF for founders in Germany
 - CTA button: Download
 
 **Version 3 (curiosity / cost)**
-- Primary text: What does it actually cost to start a company in Germany? For us: about €650 in fees and two months of waiting. Here's the full breakdown, step by step. Free.
+- Primary text: What does it actually cost to start a company in Germany? For us: about €650 in fees and four months of waiting. Here's the full breakdown, step by step. Free.
 - Headline: Real Costs. Real Timeline.
 - Description: Free checklist in plain English
 - CTA button: Learn More
