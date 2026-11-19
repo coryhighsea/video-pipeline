@@ -45,8 +45,8 @@ export default async function Home() {
 
       <footer>
         <div className="wrap">
-          © {new Date().getFullYear()} {site.brand}. We&apos;ll only use your details to send the guide and
-          occasional related updates. Unsubscribe anytime.
+          © {new Date().getFullYear()} {site.brand}. We&apos;ll use your details to send the checklist and
+          occasional emails about starting a side hustle in Germany. Unsubscribe anytime. Not legal or tax advice.
         </div>
       </footer>
     </>
