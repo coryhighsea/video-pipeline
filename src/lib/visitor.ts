@@ -6,7 +6,7 @@ export type Consent = "yes" | "no" | null;
 
 /**
  * The visitor's A/B identity. Without cookie consent there is no visitor id, the
- * control variant is shown, and nothing counts toward the experiment.
+ * default variant is shown, and nothing counts toward the experiment.
  */
 export async function currentVisitor(): Promise<{
   consent: Consent;
@@ -22,7 +22,7 @@ export async function currentVisitor(): Promise<{
   return {
     consent,
     visitorId,
-    variant: assigned ?? experiment.variants[0],
+    variant: assigned ?? experiment.variants.find((v) => v.id === experiment.defaultVariant) ?? experiment.variants[0],
     inExperiment: Boolean(visitorId && assigned),
   };
 }

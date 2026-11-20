@@ -130,7 +130,7 @@ export default function LeadForm({ cta }: { cta: string }) {
         <span>
           First name <span className="opt">(optional)</span>
         </span>
-        <input name="name" type="text" autoComplete="given-name" maxLength={100} placeholder="Alex" />
+        <input name="name" type="text" autoComplete="given-name" maxLength={100} placeholder="Johnny" />
       </label>
       <label>
         Email

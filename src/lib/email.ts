@@ -21,7 +21,7 @@ function footer(state: NewsletterState, unsubscribeUrl: string, baseUrl: string)
   const site = baseUrl.replace(/^https?:\/\//, "");
   const note =
     state === "none"
-      ? `This is a one-time email with the checklist you requested on ${site}. You won't get anything else from us.`
+      ? `You're receiving this because you requested the checklist on ${site}.`
       : state === "pending"
         ? `You requested the checklist on ${site}. If you don't confirm your subscription, you won't get any more emails.`
         : `You're subscribed to emails from ${site}. <a href="${unsubscribeUrl}" style="color:#777">Unsubscribe</a> anytime with one click.`;

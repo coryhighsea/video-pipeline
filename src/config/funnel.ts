@@ -40,9 +40,12 @@ export type Variant = {
 /**
  * Changing `id` starts a fresh experiment: every visitor is re-bucketed and the
  * dashboard reports on the new experiment only (old data stays in the DB).
+ * `defaultVariant` is what visitors see before accepting cookies (and if they decline).
+ * The first variant in the list is the control the dashboard compares against.
  */
-export const experiment: { id: string; variants: Variant[] } = {
+export const experiment: { id: string; defaultVariant: string; variants: Variant[] } = {
   id: "germany-checklist-v1",
+  defaultVariant: "b",
   variants: [
     {
       // Pain-led: the bureaucracy, with concrete costs and time.
@@ -130,7 +133,7 @@ export const email = {
     <p>Here's <strong>${site.magnetTitle}</strong>. It's attached to this email.</p>
     <p>It's every step my co-founder and I went through to register our company here: the notary, the Handelsregister,
     the Finanzamt, the costs, the waiting, and the VAT decision I'd think hard about before you start.</p>
-    <p>Got a question about your own setup? Just hit reply. I read every message.</p>
+    <p>Got a question about your own setup? Just hit reply.</p>
     <p>Cheers,<br>Cory</p>
   `,
 };
