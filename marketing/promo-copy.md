@@ -42,9 +42,9 @@ If you're thinking about starting a side hustle in Germany, grab it free: [LINK]
 
 ## Short post (X / Threads / Reddit-style)
 
-Registering a company in Germany took us ~4 months, €606 in fees, a notary, a court, and the Finanzamt asking for "just one more document."
+Registering a company in Germany took us ~4 months, about €600 in fees, a notary, a court, and the Finanzamt asking for "just one more document."
 
-I turned it into a free step-by-step checklist so you don't have to figure it out from scratch: [LINK]
+I turned it into a free step-by-step checklist so you don't have to figure it out from scratch: https://stack-crate.com
 
 ## Instagram / TikTok caption
 
