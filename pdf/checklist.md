@@ -3,7 +3,7 @@
 <div class="band">
 <div class="eyebrow">Free checklist · Starting a company in Germany</div>
 <h1>The checklist I wish I had when registering a company in Germany</h1>
-<p class="sub">Two Canadians, one UG, four months of paperwork, and everything we learned along the way.</p>
+<p class="sub">What it actually took to register our UG in Germany: about four months, €606 in fees, and a lot of lessons I wish someone had told me first.</p>
 </div>
 <div class="inside">
 <h3>What's inside</h3>
@@ -26,7 +26,7 @@
 Most side hustles start as a **freelancer** (Freiberufler) or **sole proprietor** (Einzelunternehmen), which is a lot simpler. We registered a **UG**, the longest path, so every step is here. The tags show who needs which step.
 
 <div class="stats">
-<div><b>~€650</b><span>in notary, court and Gewerbeamt fees</span></div>
+<div><b>€606</b><span>in notary, court and Gewerbeamt fees</span></div>
 <div><b>~4 months</b><span>until we could legally send an invoice</span></div>
 <div><b>8 months</b><span>until our first paying customer</span></div>
 </div>
@@ -41,9 +41,9 @@ Most side hustles start as a **freelancer** (Freiberufler) or **sole proprietor*
 | <span class="box"></span> | 6. Open a business bank account, deposit capital | <span class="tag ug">UG / GmbH</span> | | a day |
 | <span class="box"></span> | 7. Send proof of deposit back to the notary | <span class="tag ug">UG / GmbH</span> | | |
 | <span class="box"></span> | 8. Wait for the *Handelsregister* entry | <span class="tag ug">UG / GmbH</span> | | <strong>~4 weeks</strong> |
-| <span class="box"></span> | 9. Pay the notary and court fees | <span class="tag ug">UG / GmbH</span> | <span class="money">~€600</span> | |
+| <span class="box"></span> | 9. Pay the notary and court fees | <span class="tag ug">UG / GmbH</span> | <span class="money">€573</span> | |
 | <span class="box"></span> | 10. Register in the *Transparenzregister* | <span class="tag ug">UG / GmbH</span> | free for us | 15 min |
-| <span class="box"></span> | 11. Register your trade at the *Gewerbeamt* | <span class="tag gew">UG / GmbH / sole prop.</span> | <span class="money">~€50</span> | an hour |
+| <span class="box"></span> | 11. Register your trade at the *Gewerbeamt* | <span class="tag gew">UG / GmbH / sole prop.</span> | <span class="money">€33</span> | an hour |
 | <span class="box"></span> | **12. Decide: VAT exemption or not** | <span class="tag all">Everyone</span> | | |
 | <span class="box"></span> | 13. Send the tax questionnaire to the *Finanzamt* | <span class="tag all">Everyone</span> | free | an evening |
 | <span class="box"></span> | 14. Answer the Finanzamt's follow-ups | <span class="tag all">Everyone</span> | | weeks |
@@ -125,7 +125,7 @@ With the notarized registration and proof of the starting capital, the notary se
 
 - [ ] Wait
 
-Then my co-founder received an invoice from the Handelsregister for about **€300**, and one from the notary for about the same. The business was registered and around €600 was paid, but we weren't done yet.
+Then my co-founder received the invoices: **€300** from the district court in Cologne (*Amtsgericht Köln*) for the Handelsregister entry, and **€273** from the notary. The business was registered and €573 was paid, but we weren't done yet.
 
 - [ ] Pay the court and notary fees
 
@@ -139,7 +139,7 @@ I had to enter our company and the ownership split in the **Transparenzregister*
 
 - [ ] Register in the Transparenzregister
 
-Then we registered at the **Gewerbeamt** (trade office). This cost about **€50**. It can be done online, but in Germany it's almost easier to go to the local office in person, because the online version still ended up needing a hand-signed paper sent by mail.
+Then we registered at the **Gewerbeamt** (trade office). This cost **€33**. It can be done online, but in Germany it's almost easier to go to the local office in person, because the online version still ended up needing a hand-signed paper sent by mail.
 
 - [ ] Register at the Gewerbeamt (UG, GmbH and sole proprietors; freelancers skip this)
 
@@ -176,7 +176,7 @@ Looking back, unless you already have customers lined up and expect to go over t
 
 We started all this early, before we had paying customers, because we knew it would take a while. We didn't want someone ready to pay us without being able to send them an invoice.
 
-Bookkeeping starts right away. We were already paying for software and hosting, so we had expenses before any revenue. The VAT returns go to the Finanzamt through ELSTER.
+Bookkeeping starts right away. We were already paying for software and hosting, so we had expenses before any revenue. Our Steuerberater handles the bookkeeping and VAT returns for us using DATEV. You can probably file VAT returns yourself through ELSTER, but we've never tried.
 
 **A tax consultant is pretty much necessary in Germany.** The yearly tax return for a company isn't really doable alone. It's possible from what I read, but not worth it. We found a *Steuerberater* who quoted us for the yearly taxes and offered monthly bookkeeping and VAT returns. Monthly bookkeeping also makes the yearly return faster.
 
@@ -197,7 +197,7 @@ Eight months after we started the whole process, we received our first payment f
 <li><strong>Pick the simplest company type that fits.</strong> Freelancer or sole proprietor takes a few steps. A UG takes sixteen. Only go UG/GmbH if you really need the liability protection.</li>
 <li><strong>Doing it in German is fine.</strong> Our German is "manageable" and that was enough for the notary and the offices. English is possible but costs more.</li>
 <li><strong>Keep your company description broad.</strong> "Development, sales and delivery of software services" gave us room to change direction without going back to the notary.</li>
-<li><strong>The starting capital isn't a fee.</strong> It stays in your business account. The real costs were about €650 in fees.</li>
+<li><strong>The starting capital isn't a fee.</strong> It stays in your business account. The real costs were €606 in fees: €273 for the notary, €300 for the court and €33 for the Gewerbeamt.</li>
 <li><strong>The Handelsregister is slow and following up doesn't help.</strong> Use the wait to get ELSTER and the Gewerbeamt ready.</li>
 <li><strong>Go to the Gewerbeamt in person.</strong> "Online" still meant mailing a signed paper.</li>
 <li><strong>Register with the Finanzamt yourself</strong> instead of waiting for the Gewerbeamt to pass it on, and have your rental agreement ready if you use your home address.</li>
