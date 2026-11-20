@@ -30,7 +30,7 @@ bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local 
 - `src/app/api/track`: unique view per visitor per experiment (the client fires it on mount).
 - `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Bot check: the form sends `elapsed` (ms since it rendered); missing or < 1.5s is rejected with a visible error (`lead.bot_check` log). **Don't reintroduce a hidden honeypot field**: browser autofill filled it twice and silently dropped real signups. Plus an in-memory IP rate limit. Unexpected errors are logged as `lead.exception` with the real message.
 - `src/app/admin`: dashboard (totals, answered/unsubscribed, conversion per variant with lift and p-value, qualifying-answer breakdowns, leads per day, recent leads) plus `/admin/leads.csv`.
-- `src/app/api/health`: DB read **and write** check, used by the Docker `HEALTHCHECK` (fails if the `/app/data` volume isn't writable).
+- `src/app/api/health`: DB read **and write** check plus which email env vars are set (values masked), used by the Docker `HEALTHCHECK` (fails if the `/app/data` volume isn't writable).
 - Logs are JSON lines on stdout (`lead.created`, `lead.qualified`, `lead.confirmed`, `lead.unsubscribed`, `lead.bot_check`, `lead.rate_limited`, `lead.exception`).
 
 ## A/B testing
@@ -41,7 +41,7 @@ To start a new test, change `experiment.id` and the variants in `src/config/funn
 
 - Build pack: **Dockerfile**. Port **3030**.
 - Persistent storage: mount a volume at **`/app/data`**, or every redeploy wipes the leads.
-- Env: `RESEND_API_KEY`, `EMAIL_FROM` (verified Resend domain), `EMAIL_REPLY_TO` (optional), `ADMIN_PASSWORD`, `SITE_URL` (optional, e.g. `https://example.com`, used for email links; otherwise derived from proxy headers).
+- Env: `RESEND_API_KEY`, `EMAIL_FROM` (verified Resend domain; `Name <addr>` format OK, surrounding quotes are stripped), `EMAIL_REPLY_TO` (optional), `ADMIN_PASSWORD`, `SITE_URL` (optional, e.g. `https://example.com`, used for email links; otherwise derived from proxy headers).
 - Health check path: `/api/health`.
 
 ## Rules

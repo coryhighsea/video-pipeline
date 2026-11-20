@@ -159,8 +159,9 @@ export default function Admin() {
                 </td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
                 <td className="num">{l.request_count}</td>
-                <td title={l.email_error ?? undefined}>
+                <td style={{ whiteSpace: "normal", minWidth: 120 }}>
                   <span className={l.email_status === "sent" ? "pill" : "pill bad"}>{l.email_status}</span>
+                  {l.email_error && <div className="err-detail">{l.email_error}</div>}
                 </td>
               </tr>
             ))}

@@ -33,6 +33,26 @@ function footer(state: NewsletterState, unsubscribeUrl: string, baseUrl: string)
     </p>`;
 }
 
+/**
+ * Env values pasted into hosting dashboards often keep their quotes or stray whitespace
+ * (e.g. `"Cory Hisey <me@x.com>"`), which Resend rejects as an invalid sender. Normalise them.
+ */
+function envValue(name: string): string | undefined {
+  const raw = process.env[name]?.trim();
+  if (!raw) return undefined;
+  const unquoted = raw.replace(/^(['"])(.*)\1$/s, "$2").trim();
+  return unquoted || undefined;
+}
+
+/** Which email settings are present (never their values), for /api/health. */
+export function emailConfig() {
+  return {
+    apiKey: Boolean(envValue("RESEND_API_KEY")),
+    from: envValue("EMAIL_FROM")?.replace(/<.*>/, "<…>") ?? null,
+    replyTo: Boolean(envValue("EMAIL_REPLY_TO")),
+  };
+}
+
 export async function sendLeadMagnet(opts: {
   to: string;
   name: string | null;
@@ -40,8 +60,8 @@ export async function sendLeadMagnet(opts: {
   token: string;
   newsletter: NewsletterState;
 }): Promise<SendResult> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  const apiKey = envValue("RESEND_API_KEY");
+  const from = envValue("EMAIL_FROM");
   if (!apiKey || !from) {
     return { status: "skipped", error: "RESEND_API_KEY or EMAIL_FROM not set" };
   }
@@ -53,7 +73,7 @@ export async function sendLeadMagnet(opts: {
     const { data, error } = await resend.emails.send({
       from,
       to: opts.to,
-      replyTo: process.env.EMAIL_REPLY_TO || undefined,
+      replyTo: envValue("EMAIL_REPLY_TO"),
       subject: email.subject,
       html: email.html(opts.name, opts.newsletter, confirmUrl) + footer(opts.newsletter, unsubscribeUrl, opts.baseUrl),
       attachments: [{ filename: site.pdfFilename, content: await pdf() }],
