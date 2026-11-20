@@ -190,3 +190,4 @@ label.check input { width: 18px; height: 18px; margin: 2px 0 0; padding: 0; acce
 label.check small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; margin-top: 2px; }
 .pill.muted-pill { background: var(--border); color: var(--muted); }
 .err-detail { color: var(--danger); font-size: 0.75rem; margin-top: 4px; max-width: 280px; }
+.danger-link { color: var(--danger) !important; font-size: 0.8rem; }

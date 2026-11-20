@@ -29,7 +29,7 @@ bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local 
 - `src/lib/db.ts`: SQLite at `$DATA_DIR/funnel.sqlite`; schema is created on boot (`visits`, `leads`). New columns are added via the additive `addColumn` migrations; `phone` is kept in the DB/API but removed from the form.
 - `src/app/api/track`: unique view per visitor per experiment (the client fires it on mount).
 - `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Bot check: the form sends `elapsed` (ms since it rendered); missing or < 1.5s is rejected with a visible error (`lead.bot_check` log). **Don't reintroduce a hidden honeypot field**: browser autofill filled it twice and silently dropped real signups. Plus an in-memory IP rate limit. Unexpected errors are logged as `lead.exception` with the real message.
-- `src/app/admin`: dashboard (totals, answered/unsubscribed, conversion per variant with lift and p-value, qualifying-answer breakdowns, leads per day, recent leads) plus `/admin/leads.csv`.
+- `src/app/admin`: dashboard (totals, answered/unsubscribed, conversion per variant with lift and p-value, qualifying-answer breakdowns, leads per day, recent leads) plus `/admin/leads.csv` and a per-lead Delete button (`POST /admin/leads/delete`, same-origin check against CSRF).
 - `src/app/api/health`: DB read **and write** check plus which email env vars are set (values masked), used by the Docker `HEALTHCHECK` (fails if the `/app/data` volume isn't writable).
 - Logs are JSON lines on stdout (`lead.created`, `lead.qualified`, `lead.confirmed`, `lead.unsubscribed`, `lead.bot_check`, `lead.rate_limited`, `lead.exception`).
 

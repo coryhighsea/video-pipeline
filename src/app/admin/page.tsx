@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { experiment } from "@/config/funnel";
+import DeleteLeadButton from "./DeleteLeadButton";
 import { dailyLeads, experimentStats, labelFor, overview, qualifyBreakdown, recentLeads } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -131,12 +132,13 @@ export default function Admin() {
               <th>Variant</th>
               <th>Requests</th>
               <th>Email status</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {leads.length === 0 && (
               <tr>
-                <td colSpan={9}>No leads yet.</td>
+                <td colSpan={10}>No leads yet.</td>
               </tr>
             )}
             {leads.map((l) => (
@@ -162,6 +164,9 @@ export default function Admin() {
                 <td style={{ whiteSpace: "normal", minWidth: 120 }}>
                   <span className={l.email_status === "sent" ? "pill" : "pill bad"}>{l.email_status}</span>
                   {l.email_error && <div className="err-detail">{l.email_error}</div>}
+                </td>
+                <td>
+                  <DeleteLeadButton id={l.id} email={l.email} />
                 </td>
               </tr>
             ))}
