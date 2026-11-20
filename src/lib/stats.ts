@@ -71,8 +71,6 @@ export function overview() {
     subscribers: q<{ n: number }>(
       "SELECT COUNT(*) AS n FROM leads WHERE newsletter = 'confirmed' AND unsubscribed_at IS NULL",
     ).n,
-    pendingConfirm: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE newsletter = 'pending'").n,
-    optedIn: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE newsletter_requested_at IS NOT NULL").n,
     emailFailed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE email_status IN ('failed','skipped')").n,
   };
 }

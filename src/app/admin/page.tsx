@@ -34,13 +34,7 @@ export default function Admin() {
         <Tile
           label="Newsletter subscribers"
           value={o.subscribers}
-          sub={o.optedIn ? `${pct(o.subscribers / o.optedIn)} confirmed` : undefined}
-        />
-        <Tile label="Awaiting confirmation" value={o.pendingConfirm} />
-        <Tile
-          label="Ticked the opt-in box"
-          value={o.optedIn}
-          sub={o.totalLeads ? pct(o.optedIn / o.totalLeads) : undefined}
+          sub={o.totalLeads ? `${pct(o.subscribers / o.totalLeads)} of leads` : undefined}
         />
         <Tile label="Unsubscribed" value={o.unsubscribed} />
         <Tile label="Emails not delivered" value={o.emailFailed} />
@@ -152,9 +146,7 @@ export default function Admin() {
                   {l.unsubscribed_at ? (
                     <span className="pill bad">unsubscribed</span>
                   ) : l.newsletter === "confirmed" ? (
-                    <span className="pill">confirmed</span>
-                  ) : l.newsletter === "pending" ? (
-                    <span className="pill muted-pill">pending</span>
+                    <span className="pill">subscribed</span>
                   ) : (
                     "PDF only"
                   )}

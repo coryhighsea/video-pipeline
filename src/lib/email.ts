@@ -22,9 +22,7 @@ function footer(state: NewsletterState, unsubscribeUrl: string, baseUrl: string)
   const note =
     state === "none"
       ? `You're receiving this because you requested the checklist on ${site}.`
-      : state === "pending"
-        ? `You requested the checklist on ${site}. If you don't confirm your subscription, you won't get any more emails.`
-        : `You're subscribed to emails from ${site}. <a href="${unsubscribeUrl}" style="color:#777">Unsubscribe</a> anytime with one click.`;
+      : `You're subscribed to emails from ${site}. <a href="${unsubscribeUrl}" style="color:#777">Unsubscribe</a> anytime with one click.`;
   return `
     <hr style="border:none;border-top:1px solid #ddd;margin:32px 0 16px">
     <p style="font-size:12px;color:#777;line-height:1.5">
@@ -67,7 +65,6 @@ export async function sendLeadMagnet(opts: {
   }
   const unsubscribeUrl = `${opts.baseUrl}/unsubscribe?t=${opts.token}`;
   const oneClickUrl = `${opts.baseUrl}/api/unsubscribe?t=${opts.token}`;
-  const confirmUrl = `${opts.baseUrl}/confirm?t=${opts.token}`;
   try {
     const resend = new Resend(apiKey);
     const { data, error } = await resend.emails.send({
@@ -75,10 +72,10 @@ export async function sendLeadMagnet(opts: {
       to: opts.to,
       replyTo: envValue("EMAIL_REPLY_TO"),
       subject: email.subject,
-      html: email.html(opts.name, opts.newsletter, confirmUrl) + footer(opts.newsletter, unsubscribeUrl, opts.baseUrl),
+      html: email.html(opts.name) + footer(opts.newsletter, unsubscribeUrl, opts.baseUrl),
       attachments: [{ filename: site.pdfFilename, content: await pdf() }],
-      // RFC 8058 one-click unsubscribe (Gmail/Outlook's native button), only for confirmed subscribers.
-      // PDF-only and unconfirmed recipients aren't on any list.
+      // RFC 8058 one-click unsubscribe (Gmail/Outlook's native button), only for subscribers.
+      // PDF-only recipients aren't on any list.
       headers:
         opts.newsletter === "confirmed"
           ? { "List-Unsubscribe": `<${oneClickUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }

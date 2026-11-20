@@ -10,7 +10,6 @@ export default function LeadForm({ cta }: { cta: string }) {
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState("");
   const [token, setToken] = useState("");
-  const [pending, setPending] = useState(false);
   // When the form appeared; the server rejects instant (scripted) submissions.
   const mountedAt = useRef(Date.now());
 
@@ -40,7 +39,6 @@ export default function LeadForm({ cta }: { cta: string }) {
       if (!res.ok || !data.token) throw new Error(data.error ?? "Something went wrong. Please try again.");
       setSentTo(payload.email);
       setToken(data.token);
-      setPending(data.newsletter === "pending");
       setStep("qualify");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -72,7 +70,6 @@ export default function LeadForm({ cta }: { cta: string }) {
         <h2>Check your inbox ✓</h2>
         <p>
           The checklist is on its way to <strong>{sentTo}</strong>.
-          {pending && " Click the confirm button in that email to get future emails too."}
         </p>
         <form onSubmit={onQualify} className="qualify">
           <p className="qualify-intro">
@@ -118,7 +115,6 @@ export default function LeadForm({ cta }: { cta: string }) {
         <p>
           We&apos;ve sent the checklist to <strong>{sentTo}</strong>. It can take a minute to arrive, so check
           your spam folder if you don&apos;t see it.
-          {pending && " Remember to click the confirm button in it to subscribe."}
         </p>
       </div>
     );

@@ -30,9 +30,9 @@ export default function Privacy() {
             the checklist you asked for, once. Legal basis: your request (Art. 6(1)(b) GDPR).
           </li>
           <li>
-            <strong>Newsletter (only if you tick the box).</strong> I send you an email with a confirmation link
-            (double opt-in) and only add you to the list once you confirm. I store when you ticked the box and when
-            you confirmed, as proof of your consent. Legal basis: your consent (Art. 6(1)(a) GDPR). Withdraw it
+            <strong>Newsletter (only if you tick the box).</strong> Ticking the box adds you to the list for
+            occasional emails about starting a side hustle in Germany. I store when you ticked the box as a record of
+            your consent. Legal basis: your consent (Art. 6(1)(a) GDPR). Withdraw it
             anytime with the unsubscribe link in every newsletter email.
           </li>
           <li>

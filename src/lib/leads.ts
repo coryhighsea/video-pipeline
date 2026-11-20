@@ -23,23 +23,3 @@ export function leadByToken(token: string | null) {
       .get(token) ?? null
   );
 }
-
-/**
- * Double opt-in step 2. Only leads who ticked the box ('pending') can confirm; re-confirming is a no-op.
- * Confirming also lifts an earlier unsubscribe, since it's fresh consent.
- */
-export function confirmSubscription(token: string | null): boolean {
-  if (!token) return false;
-  const row = db()
-    .query<{ id: number }, [string]>(
-      `UPDATE leads SET
-         newsletter = 'confirmed',
-         newsletter_confirmed_at = CASE WHEN newsletter = 'confirmed' THEN newsletter_confirmed_at ELSE datetime('now') END,
-         unsubscribed_at = CASE WHEN newsletter = 'pending' THEN NULL ELSE unsubscribed_at END
-       WHERE token = ? AND newsletter IN ('pending', 'confirmed')
-       RETURNING id`,
-    )
-    .get(token);
-  if (row) log("info", "lead.confirmed", { leadId: row.id });
-  return Boolean(row);
-}

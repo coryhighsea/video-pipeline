@@ -49,8 +49,8 @@ function open(): Database {
   addColumn("job_status", "TEXT");
   addColumn("hustle_stage", "TEXT");
   addColumn("qualified_at", "TEXT");
-  // Double opt-in: 'none' (PDF only) → 'pending' (ticked the box) → 'confirmed' (clicked the email link).
-  // The timestamps are the consent record.
+  // Newsletter: 'none' (PDF only) or 'confirmed' (ticked the box = subscribed). 'pending' only exists on
+  // rows from the old double opt-in flow and is treated as not subscribed. The timestamps are the consent record.
   addColumn("newsletter", "TEXT NOT NULL DEFAULT 'none'");
   addColumn("newsletter_requested_at", "TEXT");
   addColumn("newsletter_confirmed_at", "TEXT");

@@ -84,27 +84,31 @@ async function handle(req: Request): Promise<Response> {
   const { visitorId, variant } = await currentVisitor();
 
   // First signup keeps its original variant (that's the conversion we count).
-  // Newsletter (double opt-in): ticking the box makes the lead 'pending' unless they're already an
-  // active confirmed subscriber. Not ticking it never downgrades an existing subscription.
+  // Newsletter (single opt-in): ticking the box subscribes them ('confirmed') and lifts any earlier
+  // unsubscribe, since it's fresh consent. Not ticking it never downgrades an existing subscription.
   const lead = db()
     .query<
       { id: number; request_count: number; name: string | null; token: string; newsletter: string; unsubscribed_at: string | null },
       Record<string, string | number | null>
     >(
-      `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant, token, newsletter, newsletter_requested_at)
+      `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant, token, newsletter,
+                          newsletter_requested_at, newsletter_confirmed_at)
        VALUES ($email, $name, $phone, $visitor, $experiment, $variant, $token,
-               CASE WHEN $sub = 1 THEN 'pending' ELSE 'none' END,
+               CASE WHEN $sub = 1 THEN 'confirmed' ELSE 'none' END,
+               CASE WHEN $sub = 1 THEN datetime('now') END,
                CASE WHEN $sub = 1 THEN datetime('now') END)
        ON CONFLICT(email) DO UPDATE SET
          name = COALESCE(excluded.name, leads.name),
          phone = COALESCE(excluded.phone, leads.phone),
          request_count = leads.request_count + 1,
-         newsletter = CASE
-           WHEN $sub = 1 AND (leads.newsletter != 'confirmed' OR leads.unsubscribed_at IS NOT NULL) THEN 'pending'
-           ELSE leads.newsletter END,
+         newsletter = CASE WHEN $sub = 1 THEN 'confirmed' ELSE leads.newsletter END,
          newsletter_requested_at = CASE
            WHEN $sub = 1 AND (leads.newsletter != 'confirmed' OR leads.unsubscribed_at IS NOT NULL) THEN datetime('now')
            ELSE leads.newsletter_requested_at END,
+         newsletter_confirmed_at = CASE
+           WHEN $sub = 1 AND (leads.newsletter != 'confirmed' OR leads.unsubscribed_at IS NOT NULL) THEN datetime('now')
+           ELSE leads.newsletter_confirmed_at END,
+         unsubscribed_at = CASE WHEN $sub = 1 THEN NULL ELSE leads.unsubscribed_at END,
          updated_at = datetime('now')
        RETURNING id, request_count, name, token, newsletter, unsubscribed_at`,
     )
@@ -119,13 +123,8 @@ async function handle(req: Request): Promise<Response> {
       $sub: subscribe,
     })!;
 
-  // What this email should say: confirmed-and-active, waiting for confirmation, or PDF only.
-  const state: NewsletterState =
-    lead.newsletter === "pending"
-      ? "pending"
-      : lead.newsletter === "confirmed" && !lead.unsubscribed_at
-        ? "confirmed"
-        : "none";
+  // What this email should say: active subscriber, or PDF only.
+  const state: NewsletterState = lead.newsletter === "confirmed" && !lead.unsubscribed_at ? "confirmed" : "none";
 
   const result = await sendLeadMagnet({
     to: email,
