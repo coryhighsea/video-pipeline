@@ -5,6 +5,20 @@ import { newsletter, qualify } from "@/config/funnel";
 
 type Step = "form" | "sending" | "qualify" | "saving" | "done";
 
+/** Where this visit came from: UTM tags in the URL plus the referring page. Nothing is stored on the device. */
+function attribution() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    ref: document.referrer,
+    utm: {
+      source: p.get("utm_source"),
+      medium: p.get("utm_medium"),
+      campaign: p.get("utm_campaign"),
+      content: p.get("utm_content"),
+    },
+  };
+}
+
 export default function LeadForm({ cta }: { cta: string }) {
   const [step, setStep] = useState<Step>("form");
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +29,12 @@ export default function LeadForm({ cta }: { cta: string }) {
 
   // Count a unique view for the A/B test (server dedupes per visitor).
   useEffect(() => {
-    fetch("/api/track", { method: "POST", keepalive: true }).catch(() => {});
+    fetch("/api/track", {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(attribution()),
+    }).catch(() => {});
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -26,6 +45,7 @@ export default function LeadForm({ cta }: { cta: string }) {
       email: String(form.get("email") ?? ""),
       subscribe: form.get("subscribe") === "on",
       elapsed: Date.now() - mountedAt.current,
+      ...attribution(),
     };
     setStep("sending");
     setError(null);

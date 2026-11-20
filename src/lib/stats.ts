@@ -75,6 +75,51 @@ export function overview() {
   };
 }
 
+export type SourceRow = {
+  source: string;
+  campaign: string | null;
+  content: string | null;
+  visitors: number;
+  leads: number;
+  subscribers: number;
+};
+
+/**
+ * Visitors and leads per source in the current experiment. With `byCampaign`, only tagged traffic,
+ * split by utm_campaign / utm_content (use it to compare ads). Leads from before tracking show as "unknown".
+ */
+export function sourceStats(byCampaign = false): SourceRow[] {
+  const keys = byCampaign ? "source, campaign, content" : "source";
+  const where = byCampaign ? "AND campaign IS NOT NULL" : "";
+  const visits = db()
+    .query<{ source: string | null; campaign: string | null; content: string | null; n: number }, [string]>(
+      `SELECT ${keys}, ${byCampaign ? "" : "NULL AS campaign, NULL AS content,"} COUNT(*) AS n
+       FROM visits WHERE experiment_id = ? ${where} GROUP BY ${keys}`,
+    )
+    .all(experiment.id);
+  const leads = db()
+    .query<{ source: string | null; campaign: string | null; content: string | null; n: number; subs: number }, [string]>(
+      `SELECT ${keys}, ${byCampaign ? "" : "NULL AS campaign, NULL AS content,"} COUNT(*) AS n,
+              SUM(newsletter = 'confirmed' AND unsubscribed_at IS NULL) AS subs
+       FROM leads WHERE experiment_id = ? ${where} GROUP BY ${keys}`,
+    )
+    .all(experiment.id);
+
+  const rows = new Map<string, SourceRow>();
+  const row = (r: { source: string | null; campaign: string | null; content: string | null }) => {
+    const key = JSON.stringify([r.source, r.campaign, r.content]);
+    let out = rows.get(key);
+    if (!out) {
+      out = { source: r.source ?? "unknown", campaign: r.campaign, content: r.content, visitors: 0, leads: 0, subscribers: 0 };
+      rows.set(key, out);
+    }
+    return out;
+  };
+  for (const v of visits) row(v).visitors = v.n;
+  for (const l of leads) Object.assign(row(l), { leads: l.n, subscribers: l.subs ?? 0 });
+  return [...rows.values()].sort((a, b) => b.leads - a.leads || b.visitors - a.visitors);
+}
+
 export function dailyLeads(days = 30): { day: string; n: number }[] {
   const rows = db()
     .query<{ day: string; n: number }, [string]>(
@@ -102,6 +147,8 @@ export type LeadRow = {
   newsletter_confirmed_at: string | null;
   experiment_id: string | null;
   variant: string | null;
+  source: string | null;
+  campaign: string | null;
   request_count: number;
   email_status: string;
   email_error: string | null;
@@ -112,7 +159,7 @@ export function recentLeads(limit = 50): LeadRow[] {
   return db()
     .query<LeadRow, [number]>(
       `SELECT id, email, name, phone, job_status, hustle_stage, unsubscribed_at, newsletter, newsletter_confirmed_at,
-              experiment_id, variant, request_count, email_status, email_error, created_at
+              experiment_id, variant, source, campaign, request_count, email_status, email_error, created_at
        FROM leads ORDER BY id DESC LIMIT ?`,
     )
     .all(limit);

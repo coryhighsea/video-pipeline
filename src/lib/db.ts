@@ -38,10 +38,19 @@ function open(): Database {
   `);
 
   // Additive migrations for databases created by earlier versions.
-  const leadCols = new Set(db.query<{ name: string }, []>("PRAGMA table_info(leads)").all().map((c) => c.name));
-  const addColumn = (col: string, type: string) => {
-    if (!leadCols.has(col)) db.run(`ALTER TABLE leads ADD COLUMN ${col} ${type}`);
+  const columnAdder = (table: "leads" | "visits") => {
+    const cols = new Set(db.query<{ name: string }, []>(`PRAGMA table_info(${table})`).all().map((c) => c.name));
+    return (col: string, type: string) => {
+      if (!cols.has(col)) db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+    };
   };
+  const addColumn = columnAdder("leads");
+  // Traffic attribution (see lib/source.ts): first touch per visit row and per lead.
+  const addVisitColumn = columnAdder("visits");
+  for (const col of ["source", "medium", "campaign", "content", "referrer"]) {
+    addVisitColumn(col, "TEXT");
+    addColumn(col, "TEXT");
+  }
   addColumn("name", "TEXT");
   // Per-lead secret: used for unsubscribe links and the post-signup qualifying questions.
   addColumn("token", "TEXT");

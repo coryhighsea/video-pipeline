@@ -63,7 +63,9 @@ export default function Privacy() {
           This site doesn&apos;t use cookies or store anything on your device. To test which version of this page
           works better, your IP address and browser type are combined with a secret value and turned into a
           one-way code (a hash). Only that code and the page version you saw are stored; your IP address itself
-          isn&apos;t saved. The code can&apos;t be used to identify you or track you across other sites. Legal basis:
+          isn&apos;t saved. The code can&apos;t be used to identify you or track you across other sites. I also store
+          which website sent you here (for example linkedin.com) and any campaign tags in the link you clicked, to
+          see which posts and ads work. Legal basis:
           legitimate interest in improving the site (Art. 6(1)(f) GDPR).
         </p>
 

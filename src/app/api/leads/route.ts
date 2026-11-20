@@ -2,6 +2,7 @@ import { experiment, type NewsletterState } from "@/config/funnel";
 import { db, newToken } from "@/lib/db";
 import { sendLeadMagnet } from "@/lib/email";
 import { log } from "@/lib/log";
+import { attribution } from "@/lib/source";
 import { siteUrl } from "@/lib/url";
 import { currentVisitor } from "@/lib/visitor";
 
@@ -32,7 +33,7 @@ function rateLimited(ip: string): boolean {
   return false;
 }
 
-type Body = { name?: unknown; email?: unknown; phone?: unknown; subscribe?: unknown; elapsed?: unknown };
+type Body = { name?: unknown; email?: unknown; phone?: unknown; subscribe?: unknown; elapsed?: unknown; ref?: unknown; utm?: unknown };
 
 export async function POST(req: Request) {
   try {
@@ -82,6 +83,7 @@ async function handle(req: Request): Promise<Response> {
   const subscribe = body.subscribe === true ? 1 : 0;
 
   const { visitorId, variant } = await currentVisitor();
+  const src = attribution(body, req.headers.get("x-forwarded-host") ?? req.headers.get("host"));
 
   // First signup keeps its original variant (that's the conversion we count).
   // Newsletter (single opt-in): ticking the box subscribes them ('confirmed') and lifts any earlier
@@ -92,11 +94,12 @@ async function handle(req: Request): Promise<Response> {
       Record<string, string | number | null>
     >(
       `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant, token, newsletter,
-                          newsletter_requested_at, newsletter_confirmed_at)
+                          newsletter_requested_at, newsletter_confirmed_at, source, medium, campaign, content, referrer)
        VALUES ($email, $name, $phone, $visitor, $experiment, $variant, $token,
                CASE WHEN $sub = 1 THEN 'confirmed' ELSE 'none' END,
                CASE WHEN $sub = 1 THEN datetime('now') END,
-               CASE WHEN $sub = 1 THEN datetime('now') END)
+               CASE WHEN $sub = 1 THEN datetime('now') END,
+               $source, $medium, $campaign, $content, $referrer)
        ON CONFLICT(email) DO UPDATE SET
          name = COALESCE(excluded.name, leads.name),
          phone = COALESCE(excluded.phone, leads.phone),
@@ -121,6 +124,11 @@ async function handle(req: Request): Promise<Response> {
       $variant: variant.id,
       $token: newToken(),
       $sub: subscribe,
+      $source: src.source,
+      $medium: src.medium,
+      $campaign: src.campaign,
+      $content: src.content,
+      $referrer: src.referrer,
     })!;
 
   // What this email should say: active subscriber, or PDF only.
@@ -146,6 +154,7 @@ async function handle(req: Request): Promise<Response> {
     leadId: lead.id,
     repeat: lead.request_count > 1,
     variant: variant.id,
+    source: src.source,
     hasName: Boolean(name),
     newsletter: state,
     emailStatus: result.status,

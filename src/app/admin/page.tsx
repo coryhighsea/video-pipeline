@@ -1,12 +1,61 @@
 import type { Metadata } from "next";
 import { experiment } from "@/config/funnel";
 import DeleteLeadButton from "./DeleteLeadButton";
-import { dailyLeads, experimentStats, labelFor, overview, qualifyBreakdown, recentLeads } from "@/lib/stats";
+import {
+  dailyLeads,
+  experimentStats,
+  labelFor,
+  overview,
+  qualifyBreakdown,
+  recentLeads,
+  sourceStats,
+  type SourceRow,
+} from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Funnel dashboard", robots: { index: false } };
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+function SourceTable({ rows, campaigns }: { rows: SourceRow[]; campaigns?: boolean }) {
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            {campaigns && <th>Campaign</th>}
+            {campaigns && <th>Ad / content</th>}
+            <th>Visitors</th>
+            <th>Leads</th>
+            <th>Conversion</th>
+            <th>Subscribed</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={campaigns ? 7 : 5}>
+                {campaigns ? "No tagged (utm_campaign) traffic yet." : "No visits yet."}
+              </td>
+            </tr>
+          )}
+          {rows.map((r) => (
+            <tr key={`${r.source}|${r.campaign}|${r.content}`}>
+              <td>{r.source}</td>
+              {campaigns && <td>{r.campaign ?? "—"}</td>}
+              {campaigns && <td>{r.content ?? "—"}</td>}
+              <td className="num">{r.visitors}</td>
+              <td className="num">{r.leads}</td>
+              <td className="num">{r.visitors ? pct(r.leads / r.visitors) : "—"}</td>
+              <td className="num">{r.subscribers}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function Admin() {
   const o = overview();
@@ -15,6 +64,8 @@ export default function Admin() {
   const max = Math.max(1, ...daily.map((d) => d.n));
   const leads = recentLeads(50);
   const breakdown = qualifyBreakdown();
+  const sources = sourceStats();
+  const campaigns = sourceStats(true);
 
   return (
     <div className="admin">
@@ -77,6 +128,16 @@ export default function Admin() {
         twice. Wait for at least ~100 leads per variant before calling a winner.
       </p>
 
+      <h2>Where visitors come from</h2>
+      <SourceTable rows={sources} />
+      <p className="meta" style={{ marginTop: 8, fontSize: "0.85rem" }}>
+        From UTM tags in the link, otherwise the referring site. &ldquo;direct&rdquo; = no referrer (typed URL, or an
+        app that hides it). &ldquo;unknown&rdquo; = leads from before source tracking.
+      </p>
+
+      <h2>Campaigns and ads</h2>
+      <SourceTable rows={campaigns} campaigns />
+
       <h2>Leads per day (last 30 days)</h2>
       <div className="table-wrap">
         <div className="bars" role="img" aria-label="Leads per day over the last 30 days">
@@ -124,6 +185,7 @@ export default function Admin() {
               <th>Side hustle</th>
               <th>Newsletter</th>
               <th>Variant</th>
+              <th>Source</th>
               <th>Requests</th>
               <th>Email status</th>
               <th></th>
@@ -132,7 +194,7 @@ export default function Admin() {
           <tbody>
             {leads.length === 0 && (
               <tr>
-                <td colSpan={10}>No leads yet.</td>
+                <td colSpan={11}>No leads yet.</td>
               </tr>
             )}
             {leads.map((l) => (
@@ -152,6 +214,10 @@ export default function Admin() {
                   )}
                 </td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
+                <td>
+                  {l.source ?? "—"}
+                  {l.campaign && <span className="meta"> / {l.campaign}</span>}
+                </td>
                 <td className="num">{l.request_count}</td>
                 <td style={{ whiteSpace: "normal", minWidth: 120 }}>
                   <span className={l.email_status === "sent" ? "pill" : "pill bad"}>{l.email_status}</span>
