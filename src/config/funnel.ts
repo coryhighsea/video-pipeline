@@ -1,7 +1,7 @@
 // All funnel copy lives here.
 
 export const site = {
-  brand: "Side Hustle Germany",
+  brand: "Cory Hisey",
   magnetTitle: "The Company Registration Checklist for Germany",
   magnetFormat: "Free checklist · PDF · in plain English",
   pdfFilename: "Checklist-Starting-Company-in-Germany.pdf",
@@ -15,7 +15,7 @@ export const highlights = [
   },
   {
     title: "Real costs and real timelines",
-    body: "What we actually paid (about €650 in notary, court and registration fees), why the starting capital stays yours, and why it took about four months before we could send our first invoice.",
+    body: "What we actually paid, why the starting capital stays yours, and why it took about four months before we could send our first invoice.",
   },
   {
     title: "The VAT decision to make before you start",
@@ -23,7 +23,7 @@ export const highlights = [
   },
   {
     title: "German bureaucracy, translated",
-    body: "UG vs GmbH, Transparenzregister, ELSTER, and when a tax consultant is worth it. Written by two Canadians who did it all in German.",
+    body: "UG vs GmbH, Transparenzregister, ELSTER, and when a tax consultant is worth it. Written by a Canadian who did it all in German.",
   },
 ];
 
@@ -61,7 +61,7 @@ export const experiment: { id: string; variants: Variant[] } = {
       eyebrow: site.magnetFormat,
       headline: "The checklist I wish I had when registering a company in Germany",
       subhead:
-        "Two Canadians, one UG, and every step from the first template to the first invoice. An honest walkthrough so you can skip the guesswork and get your side hustle legally up and running.",
+        "Every step from the first template to the first invoice. An honest walkthrough so you can skip the guesswork and get your side hustle legally up and running.",
       cta: "Get the free checklist",
     },
   ],
