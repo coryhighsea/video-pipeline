@@ -14,7 +14,7 @@ export default function LeadForm({ cta }: { cta: string }) {
   // When the form appeared; the server rejects instant (scripted) submissions.
   const mountedAt = useRef(Date.now());
 
-  // Count a unique view for the A/B test (server ignores it without cookie consent).
+  // Count a unique view for the A/B test (server dedupes per visitor).
   useEffect(() => {
     fetch("/api/track", { method: "POST", keepalive: true }).catch(() => {});
   }, []);

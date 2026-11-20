@@ -1,14 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  CONSENT_COOKIE,
-  COOKIE_MAX_AGE,
-  VARIANT_COOKIE,
-  VISITOR_COOKIE,
-  parseVariantCookie,
-  pickVariant,
-  variantCookieValue,
-} from "@/lib/experiment";
+
+/** Cookies set by earlier versions of the site (A/B + consent). The site no longer sets any. */
+const LEGACY_COOKIES = ["vid", "abv", "consent"];
 
 function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
@@ -35,26 +29,11 @@ function adminAuth(req: NextRequest): NextResponse {
 export function proxy(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith("/admin")) return adminAuth(req);
 
-  // A/B cookies are only set after the visitor accepts cookies (see /api/consent).
-  // Returning visitors who accepted get re-bucketed here when a new experiment starts.
-  if (req.cookies.get(CONSENT_COOKIE)?.value !== "yes") return NextResponse.next();
-
-  let visitorId = req.cookies.get(VISITOR_COOKIE)?.value;
-  const existing = parseVariantCookie(req.cookies.get(VARIANT_COOKIE)?.value);
-  if (visitorId && existing) return NextResponse.next();
-
-  visitorId ??= crypto.randomUUID();
-  const variant = existing ?? pickVariant();
-
-  // Forward the new cookies on this request so the page renders the assigned variant
-  // immediately, then persist them on the response.
-  req.cookies.set(VISITOR_COOKIE, visitorId);
-  req.cookies.set(VARIANT_COOKIE, variantCookieValue(variant));
-  const res = NextResponse.next({ request: { headers: req.headers } });
-
-  const opts = { maxAge: COOKIE_MAX_AGE, httpOnly: true, sameSite: "lax" as const, path: "/" };
-  res.cookies.set(VISITOR_COOKIE, visitorId, opts);
-  res.cookies.set(VARIANT_COOKIE, variantCookieValue(variant), opts);
+  // The site no longer uses cookies; clear any left over from earlier versions.
+  const stale = LEGACY_COOKIES.filter((name) => req.cookies.has(name));
+  if (stale.length === 0) return NextResponse.next();
+  const res = NextResponse.next();
+  for (const name of stale) res.cookies.delete(name);
   return res;
 }
 

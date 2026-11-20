@@ -207,7 +207,7 @@ Eight months after we started the whole process, we received our first payment f
 
 <div class="signoff">
 
-Good luck with your side hustle. If you have a question about your own setup, just reply to the email this came with. I read every message.
+Good luck with your side hustle. If you have a question about your own setup, just reply to the email this came with.
 
 Cheers,<br>
 **Cory**

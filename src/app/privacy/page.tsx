@@ -58,18 +58,14 @@ export default function Privacy() {
           </li>
         </ul>
 
-        <h2 id="cookies">Cookies</h2>
-        <ul>
-          <li>
-            <code>consent</code>: remembers whether you accepted or declined cookies. Necessary, kept for 1 year.
-          </li>
-          <li>
-            <code>vid</code> and <code>abv</code>: a random visitor ID and which page version you saw, used to test
-            which version of this page works better. Only set if you click <em>Accept</em> (§ 25(1) TDDDG), kept for
-            1 year. Not used for advertising or tracking across other sites.
-          </li>
-        </ul>
-        <p>You can change your choice anytime via &ldquo;Cookie settings&rdquo; at the bottom of every page.</p>
+        <h2 id="cookies">Cookies and page testing</h2>
+        <p>
+          This site doesn&apos;t use cookies or store anything on your device. To test which version of this page
+          works better, your IP address and browser type are combined with a secret value and turned into a
+          one-way code (a hash). Only that code and the page version you saw are stored; your IP address itself
+          isn&apos;t saved. The code can&apos;t be used to identify you or track you across other sites. Legal basis:
+          legitimate interest in improving the site (Art. 6(1)(f) GDPR).
+        </p>
 
         <h2>How long data is kept</h2>
         <p>

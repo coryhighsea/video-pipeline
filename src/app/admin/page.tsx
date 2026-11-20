@@ -78,8 +78,8 @@ export default function Admin() {
         </table>
       </div>
       <p className="meta" style={{ marginTop: 8, fontSize: "0.85rem" }}>
-        Only visitors who accepted cookies are counted (one per browser). Leads from visitors who declined still
-        appear below but aren&apos;t in the test. Wait for at least ~100 leads per variant before calling a winner.
+        Visitors are counted once per IP + browser (no cookies), so the same person on a new network may count
+        twice. Wait for at least ~100 leads per variant before calling a winner.
       </p>
 
       <h2>Leads per day (last 30 days)</h2>

@@ -40,12 +40,10 @@ export type Variant = {
 /**
  * Changing `id` starts a fresh experiment: every visitor is re-bucketed and the
  * dashboard reports on the new experiment only (old data stays in the DB).
- * `defaultVariant` is what visitors see before accepting cookies (and if they decline).
  * The first variant in the list is the control the dashboard compares against.
  */
-export const experiment: { id: string; defaultVariant: string; variants: Variant[] } = {
+export const experiment: { id: string; variants: Variant[] } = {
   id: "germany-checklist-v1",
-  defaultVariant: "b",
   variants: [
     {
       // Pain-led: the bureaucracy, with concrete costs and time.

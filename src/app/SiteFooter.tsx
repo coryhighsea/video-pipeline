@@ -1,5 +1,4 @@
 import { site } from "@/config/funnel";
-import CookieSettingsLink from "./CookieSettingsLink";
 
 export default function SiteFooter() {
   return (
@@ -11,7 +10,6 @@ export default function SiteFooter() {
         <nav>
           <a href="/impressum">Impressum</a>
           <a href="/privacy">Privacy</a>
-          <CookieSettingsLink />
         </nav>
       </div>
     </footer>

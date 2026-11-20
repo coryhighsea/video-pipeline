@@ -60,6 +60,9 @@ function open(): Database {
     db.query("UPDATE leads SET token = ? WHERE id = ?").run(newToken(), id);
   }
 
+  // Small key/value store for per-deployment secrets (e.g. the A/B hashing salt).
+  db.run("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+
   return db;
 }
 
@@ -70,4 +73,10 @@ export function newToken(): string {
 export function db(): Database {
   globalForDb.__db ??= open();
   return globalForDb.__db;
+}
+
+/** Returns a random secret stored in the DB under `key`, creating it on first use. Stable across restarts. */
+export function secret(key: string): string {
+  db().query("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run(key, newToken());
+  return db().query<{ value: string }, [string]>("SELECT value FROM settings WHERE key = ?").get(key)!.value;
 }

@@ -20,8 +20,8 @@ bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local 
 
 - `src/config/funnel.ts`: **all copy**: brand, highlights, A/B variants, qualifying questions, imprint details, email subject/body. Edit this to change content.
 - `pdf/checklist.md` + `pdf/style.css`: source of the lead magnet. `bun run pdf` renders it with headless Chrome via `scripts/render-pdf.ts`. Supports `:::lesson|warning|note|tip Title … :::` callouts, `- [ ]` checklist items and `<div class="page-break"></div>`. Commit the regenerated `private/lead-magnet.pdf` (the emailed file, not publicly served).
-- `src/proxy.ts`: assigns the `vid` (visitor) and `abv` (`experimentId:variantId`) cookies on `/`, **only if `consent=yes`**, and applies HTTP basic auth to `/admin`.
-- Cookie consent: `CookieBanner` (in the layout) → `POST /api/consent` sets `consent` and, on accept, assigns the variant and records the visit. Without consent, visitors see `experiment.defaultVariant` (currently B) and aren't in the experiment (leads are stored with `experiment_id = NULL`). Footer "Cookie settings" reopens the banner.
+- `src/proxy.ts`: HTTP basic auth for `/admin`; deletes legacy cookies (`vid`, `abv`, `consent`) from earlier versions. **The site sets no cookies.**
+- A/B assignment (cookie-free, no banner): `src/lib/experiment.ts` hashes salt + IP (`X-Forwarded-For`) + user agent into a visitor id, then deterministically buckets it by variant weight. The salt is a per-deployment secret auto-created in the `settings` table (`secret("ab_salt")`). Raw IPs are never stored. Trade-off: a changed IP/browser can mean the other variant on a later visit.
 - Qualifying: `/api/leads` returns the lead's `token`; the thank-you step posts the answers to `/api/qualify` (`job_status`, `hustle_stage`). Values are validated against `qualify` in the config.
 - Double opt-in: the form has an unticked "also send me emails" checkbox. Unticked → `newsletter='none'`, PDF only, one-time email. Ticked → `'pending'` and the PDF email includes a "Yes, subscribe me" button → `/confirm?t=` page → `POST /api/confirm` → `'confirmed'` (`newsletter_requested_at` / `newsletter_confirmed_at` are the consent record). Confirmation is POST-only so link scanners can't confirm. Re-requesting without ticking never downgrades a subscription. **Only email `newsletter='confirmed' AND unsubscribed_at IS NULL`.**
 - Unsubscribe: confirmed subscribers' emails have a footer link to `/unsubscribe?t=<token>` (confirm button) plus RFC 8058 `List-Unsubscribe` one-click headers → `POST /api/unsubscribe`. GET never unsubscribes (link scanners). Confirming again (after re-ticking the box) clears `unsubscribed_at`.
@@ -35,7 +35,7 @@ bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local 
 
 ## A/B testing
 
-To start a new test, change `experiment.id` and the variants in `src/config/funnel.ts`. Visitors are re-bucketed, and the dashboard only shows the current experiment. The first variant is the control. A lead's variant is fixed at its first signup.
+To start a new test, change `experiment.id` and the variants in `src/config/funnel.ts`. Visitors are re-bucketed, and the dashboard only shows the current experiment. The first variant is the control. A lead's variant is fixed at its first signup. Don't add cookies or localStorage for A/B without bringing back a consent banner (§25 TDDDG).
 
 ## Deploy (Coolify)
 

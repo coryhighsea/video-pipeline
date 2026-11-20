@@ -81,12 +81,11 @@ async function handle(req: Request): Promise<Response> {
   const name = nameRaw || null;
   const subscribe = body.subscribe === true ? 1 : 0;
 
-  const { visitorId, variant, inExperiment } = await currentVisitor();
+  const { visitorId, variant } = await currentVisitor();
 
   // First signup keeps its original variant (that's the conversion we count).
   // Newsletter (double opt-in): ticking the box makes the lead 'pending' unless they're already an
   // active confirmed subscriber. Not ticking it never downgrades an existing subscription.
-  // Leads from visitors who declined cookies are stored without an experiment id.
   const lead = db()
     .query<
       { id: number; request_count: number; name: string | null; token: string; newsletter: string; unsubscribed_at: string | null },
@@ -114,7 +113,7 @@ async function handle(req: Request): Promise<Response> {
       $name: name,
       $phone: phone,
       $visitor: visitorId,
-      $experiment: inExperiment ? experiment.id : null,
+      $experiment: experiment.id,
       $variant: variant.id,
       $token: newToken(),
       $sub: subscribe,
@@ -148,7 +147,6 @@ async function handle(req: Request): Promise<Response> {
     leadId: lead.id,
     repeat: lead.request_count > 1,
     variant: variant.id,
-    inExperiment,
     hasName: Boolean(name),
     newsletter: state,
     emailStatus: result.status,
