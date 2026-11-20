@@ -43,7 +43,7 @@ export type Variant = {
  * The first variant in the list is the control the dashboard compares against.
  */
 export const experiment: { id: string; variants: Variant[] } = {
-  id: "germany-checklist-v1",
+  id: "germany-checklist-launch",
   variants: [
     {
       // Pain-led: the bureaucracy, with concrete costs and time.
@@ -53,7 +53,7 @@ export const experiment: { id: string; variants: Variant[] } = {
       headline: "Start your side hustle in Germany without drowning in paperwork",
       subhead:
         "Notary, Handelsregister, Gewerbeamt, Finanzamt. Get the exact steps we followed, what each one cost, how long it took, and the VAT decision that's expensive to get wrong.",
-      cta: "Send me the checklist",
+      cta: "Get the free checklist",
     },
     {
       // Story-led: the personal "I wish I had this" angle.
@@ -63,7 +63,7 @@ export const experiment: { id: string; variants: Variant[] } = {
       headline: "The checklist I wish I had when registering a company in Germany",
       subhead:
         "Every step from the first template to the first invoice. An honest walkthrough so you can skip the guesswork and get your side hustle legally up and running.",
-      cta: "Get the free checklist",
+      cta: "Send me the checklist",
     },
   ],
 };
