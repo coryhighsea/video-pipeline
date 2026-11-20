@@ -23,14 +23,15 @@ bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local 
 - `src/proxy.ts`: assigns the `vid` (visitor) and `abv` (`experimentId:variantId`) cookies on `/`, **only if `consent=yes`**, and applies HTTP basic auth to `/admin`.
 - Cookie consent: `CookieBanner` (in the layout) → `POST /api/consent` sets `consent` and, on accept, assigns the variant and records the visit. Without consent, visitors see variant A and aren't in the experiment (leads are stored with `experiment_id = NULL`). Footer "Cookie settings" reopens the banner.
 - Qualifying: `/api/leads` returns the lead's `token`; the thank-you step posts the answers to `/api/qualify` (`job_status`, `hustle_stage`). Values are validated against `qualify` in the config.
-- Unsubscribe: every email has a footer link to `/unsubscribe?t=<token>` (confirm button) plus RFC 8058 `List-Unsubscribe` one-click headers → `POST /api/unsubscribe`. GET never unsubscribes (link scanners). Signing up again clears `unsubscribed_at`.
+- Double opt-in: the form has an unticked "also send me emails" checkbox. Unticked → `newsletter='none'`, PDF only, one-time email. Ticked → `'pending'` and the PDF email includes a "Yes, subscribe me" button → `/confirm?t=` page → `POST /api/confirm` → `'confirmed'` (`newsletter_requested_at` / `newsletter_confirmed_at` are the consent record). Confirmation is POST-only so link scanners can't confirm. Re-requesting without ticking never downgrades a subscription. **Only email `newsletter='confirmed' AND unsubscribed_at IS NULL`.**
+- Unsubscribe: confirmed subscribers' emails have a footer link to `/unsubscribe?t=<token>` (confirm button) plus RFC 8058 `List-Unsubscribe` one-click headers → `POST /api/unsubscribe`. GET never unsubscribes (link scanners). Confirming again (after re-ticking the box) clears `unsubscribed_at`.
 - `/impressum`, `/privacy`: legal pages from `legal` in the config. The privacy page is a template, so review the hosting/processor details.
 - `src/lib/db.ts`: SQLite at `$DATA_DIR/funnel.sqlite`; schema is created on boot (`visits`, `leads`). New columns are added via the additive `addColumn` migrations; `phone` is kept in the DB/API but removed from the form.
 - `src/app/api/track`: unique view per visitor per experiment (the client fires it on mount).
-- `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Includes a honeypot field (`hp_x`, deliberately meaningless so autofill skips it) and an in-memory IP rate limit.
+- `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Bot check: the form sends `elapsed` (ms since it rendered); missing or < 1.5s is rejected with a visible error (`lead.bot_check` log). **Don't reintroduce a hidden honeypot field**: browser autofill filled it twice and silently dropped real signups. Plus an in-memory IP rate limit. Unexpected errors are logged as `lead.exception` with the real message.
 - `src/app/admin`: dashboard (totals, answered/unsubscribed, conversion per variant with lift and p-value, qualifying-answer breakdowns, leads per day, recent leads) plus `/admin/leads.csv`.
-- `src/app/api/health`: DB ping, used by the Docker `HEALTHCHECK`.
-- Logs are JSON lines on stdout (`lead.created`, `lead.qualified`, `lead.unsubscribed`, `lead.honeypot`, `lead.rate_limited`).
+- `src/app/api/health`: DB read **and write** check, used by the Docker `HEALTHCHECK` (fails if the `/app/data` volume isn't writable).
+- Logs are JSON lines on stdout (`lead.created`, `lead.qualified`, `lead.confirmed`, `lead.unsubscribed`, `lead.bot_check`, `lead.rate_limited`, `lead.exception`).
 
 ## A/B testing
 

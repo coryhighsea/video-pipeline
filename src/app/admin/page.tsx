@@ -30,6 +30,17 @@ export default function Admin() {
           value={o.qualified}
           sub={o.totalLeads ? pct(o.qualified / o.totalLeads) : undefined}
         />
+        <Tile
+          label="Newsletter subscribers"
+          value={o.subscribers}
+          sub={o.optedIn ? `${pct(o.subscribers / o.optedIn)} confirmed` : undefined}
+        />
+        <Tile label="Awaiting confirmation" value={o.pendingConfirm} />
+        <Tile
+          label="Ticked the opt-in box"
+          value={o.optedIn}
+          sub={o.totalLeads ? pct(o.optedIn / o.totalLeads) : undefined}
+        />
         <Tile label="Unsubscribed" value={o.unsubscribed} />
         <Tile label="Emails not delivered" value={o.emailFailed} />
       </div>
@@ -116,6 +127,7 @@ export default function Admin() {
               <th>Email</th>
               <th>Main job</th>
               <th>Side hustle</th>
+              <th>Newsletter</th>
               <th>Variant</th>
               <th>Requests</th>
               <th>Email status</th>
@@ -124,7 +136,7 @@ export default function Admin() {
           <tbody>
             {leads.length === 0 && (
               <tr>
-                <td colSpan={8}>No leads yet.</td>
+                <td colSpan={9}>No leads yet.</td>
               </tr>
             )}
             {leads.map((l) => (
@@ -134,11 +146,21 @@ export default function Admin() {
                 <td>{l.email}</td>
                 <td>{labelFor("jobStatus", l.job_status)}</td>
                 <td>{labelFor("hustleStage", l.hustle_stage)}</td>
+                <td>
+                  {l.unsubscribed_at ? (
+                    <span className="pill bad">unsubscribed</span>
+                  ) : l.newsletter === "confirmed" ? (
+                    <span className="pill">confirmed</span>
+                  ) : l.newsletter === "pending" ? (
+                    <span className="pill muted-pill">pending</span>
+                  ) : (
+                    "PDF only"
+                  )}
+                </td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
                 <td className="num">{l.request_count}</td>
                 <td title={l.email_error ?? undefined}>
                   <span className={l.email_status === "sent" ? "pill" : "pill bad"}>{l.email_status}</span>
-                  {l.unsubscribed_at && <span className="pill bad"> unsubscribed</span>}
                 </td>
               </tr>
             ))}

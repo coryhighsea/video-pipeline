@@ -15,7 +15,7 @@ export default function Privacy() {
           <a href="/">← Back</a>
         </p>
         <h1>Privacy policy</h1>
-        <p className="muted">Datenschutzerklärung · last updated November 2026</p>
+        <p className="muted">Datenschutzerklärung · last updated 20 November 2026</p>
 
         <h2>Who is responsible</h2>
         <p>
@@ -27,8 +27,13 @@ export default function Privacy() {
         <ul>
           <li>
             <strong>Email address and optional first name</strong>, when you request the checklist. Used to send you
-            the checklist and occasional emails about starting a side hustle in Germany. Legal basis: your consent
-            (Art. 6(1)(a) GDPR). You can withdraw it anytime with the unsubscribe link in every email.
+            the checklist you asked for, once. Legal basis: your request (Art. 6(1)(b) GDPR).
+          </li>
+          <li>
+            <strong>Newsletter (only if you tick the box).</strong> I send you an email with a confirmation link
+            (double opt-in) and only add you to the list once you confirm. I store when you ticked the box and when
+            you confirmed, as proof of your consent. Legal basis: your consent (Art. 6(1)(a) GDPR). Withdraw it
+            anytime with the unsubscribe link in every newsletter email.
           </li>
           <li>
             <strong>Optional answers</strong> about your job situation and side hustle stage, if you choose to give
@@ -68,7 +73,7 @@ export default function Privacy() {
 
         <h2>How long data is kept</h2>
         <p>
-          Your details are kept until you unsubscribe or ask for deletion. After you unsubscribe, I stop emailing you
+          If you only requested the checklist, your details are kept so a repeated request isn&apos;t treated as new, and are deleted on request. Newsletter subscribers&apos; details are kept until they unsubscribe or ask for deletion. After you unsubscribe, I stop emailing you
           immediately. On request I delete your data entirely; otherwise your email address may be kept on a
           suppression list so you aren&apos;t emailed again by mistake.
         </p>

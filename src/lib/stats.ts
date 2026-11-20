@@ -68,6 +68,11 @@ export function overview() {
     leads24h: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE created_at >= datetime('now','-1 day')").n,
     qualified: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE qualified_at IS NOT NULL").n,
     unsubscribed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE unsubscribed_at IS NOT NULL").n,
+    subscribers: q<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM leads WHERE newsletter = 'confirmed' AND unsubscribed_at IS NULL",
+    ).n,
+    pendingConfirm: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE newsletter = 'pending'").n,
+    optedIn: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE newsletter_requested_at IS NOT NULL").n,
     emailFailed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE email_status IN ('failed','skipped')").n,
   };
 }
@@ -95,6 +100,8 @@ export type LeadRow = {
   job_status: string | null;
   hustle_stage: string | null;
   unsubscribed_at: string | null;
+  newsletter: string;
+  newsletter_confirmed_at: string | null;
   experiment_id: string | null;
   variant: string | null;
   request_count: number;
@@ -106,7 +113,7 @@ export type LeadRow = {
 export function recentLeads(limit = 50): LeadRow[] {
   return db()
     .query<LeadRow, [number]>(
-      `SELECT id, email, name, phone, job_status, hustle_stage, unsubscribed_at,
+      `SELECT id, email, name, phone, job_status, hustle_stage, unsubscribed_at, newsletter, newsletter_confirmed_at,
               experiment_id, variant, request_count, email_status, email_error, created_at
        FROM leads ORDER BY id DESC LIMIT ?`,
     )

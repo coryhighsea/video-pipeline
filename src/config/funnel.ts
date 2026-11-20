@@ -105,16 +105,32 @@ export const legal = {
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
+export type NewsletterState = "none" | "pending" | "confirmed";
+
+export const newsletter = {
+  /** Checkbox under the signup form. Unchecked by default: ticking it is the (first) opt-in. */
+  optInLabel: "Also send me occasional emails about starting a side hustle in Germany",
+  optInHint: "You'll get a link to confirm. Unsubscribe anytime.",
+};
+
 export const email = {
   subject: "Your checklist: starting a company in Germany",
-  html: (name: string | null) => `
+  html: (name: string | null, state: NewsletterState, confirmUrl: string) => `
     <p>Hi ${name ? escapeHtml(name) : "there"},</p>
+    ${
+      state === "pending"
+        ? `<div style="border:1px solid #cfe3d8;background:#eef6f1;border-radius:8px;padding:14px 16px;margin:0 0 20px">
+             <p style="margin:0 0 10px"><strong>One click to confirm your subscription.</strong>
+             You asked for occasional emails about starting a side hustle in Germany. Please confirm it was you:</p>
+             <p style="margin:0"><a href="${confirmUrl}" style="display:inline-block;background:#1f5f4a;color:#fff;
+             text-decoration:none;font-weight:700;padding:10px 16px;border-radius:6px">Yes, subscribe me</a></p>
+           </div>`
+        : ""
+    }
     <p>Here's <strong>${site.magnetTitle}</strong>. It's attached to this email.</p>
     <p>It's every step my co-founder and I went through to register our company here: the notary, the Handelsregister,
     the Finanzamt, the costs, the waiting, and the VAT decision I'd think hard about before you start.</p>
-    <p>Over the next few weeks I'll send you more of what I've learned about starting a side hustle in Germany.
-    No fluff, just the stuff I wish someone had told me.</p>
     <p>Got a question about your own setup? Just hit reply. I read every message.</p>
-    <p>Cheers,<br>Cory<br>${site.brand}</p>
+    <p>Cheers,<br>Cory</p>
   `,
 };

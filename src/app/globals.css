@@ -112,7 +112,6 @@ input {
   color: var(--text);
 }
 input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 
 button {
   font: inherit; font-weight: 700;
@@ -198,3 +197,9 @@ select {
 .muted { color: var(--muted) !important; margin-top: 0; }
 .breakdowns { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
 .tile .sub { font-size: 0.9rem; font-weight: 500; color: var(--muted); }
+
+/* Opt-in checkbox */
+label.check { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; font-weight: 500; font-size: 0.9rem; cursor: pointer; }
+label.check input { width: 18px; height: 18px; margin: 2px 0 0; padding: 0; accent-color: var(--accent); }
+label.check small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; margin-top: 2px; }
+.pill.muted-pill { background: var(--border); color: var(--muted); }

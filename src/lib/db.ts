@@ -49,6 +49,11 @@ function open(): Database {
   addColumn("job_status", "TEXT");
   addColumn("hustle_stage", "TEXT");
   addColumn("qualified_at", "TEXT");
+  // Double opt-in: 'none' (PDF only) → 'pending' (ticked the box) → 'confirmed' (clicked the email link).
+  // The timestamps are the consent record.
+  addColumn("newsletter", "TEXT NOT NULL DEFAULT 'none'");
+  addColumn("newsletter_requested_at", "TEXT");
+  addColumn("newsletter_confirmed_at", "TEXT");
   db.run("CREATE UNIQUE INDEX IF NOT EXISTS leads_token ON leads (token)");
   // Backfill tokens for leads created before the column existed.
   for (const { id } of db.query<{ id: number }, []>("SELECT id FROM leads WHERE token IS NULL").all()) {
