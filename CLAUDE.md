@@ -1,6 +1,6 @@
 # CLAUDE.md — Lead Magnet Funnel
 
-Next.js 16 (App Router) on Bun. A landing page collects an email (plus an optional phone number) and Resend emails a PDF attachment. SQLite (`bun:sqlite`) is embedded in the same container. There's a built-in A/B test on the hero copy and a password-protected `/admin` dashboard.
+Next.js 16 (App Router) on Bun. A landing page collects an email (plus an optional first name) and Resend emails a PDF attachment. After signup, two optional qualifying questions are asked. SQLite (`bun:sqlite`) is embedded in the same container. There's a built-in A/B test on the hero copy and a password-protected `/admin` dashboard.
 
 The previous project (video pipeline) lives on the `archive/video-pipeline` branch.
 
@@ -11,21 +11,26 @@ bun install
 bun run dev         # http://localhost:3030
 bun run build       # standalone output
 bun run typecheck   # must pass with zero errors
+bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local Chrome)
 ```
 
 **Bun >= 1.4 is required.** Bun 1.3.x fails `next build` on Next 16 ("Expected CommonJS module to have a function wrapper"). Run `bun upgrade`.
 
 ## Layout
 
-- `src/config/funnel.ts`: **all copy**: brand, highlights, A/B variants, email subject/body. Edit this to change content.
-- `private/lead-magnet.pdf`: the attachment (not publicly served). Replace it with the real guide.
-- `src/proxy.ts`: assigns the `vid` (visitor) and `abv` (`experimentId:variantId`) cookies on `/`, and applies HTTP basic auth to `/admin`.
-- `src/lib/db.ts`: SQLite at `$DATA_DIR/funnel.sqlite`; schema is created on boot (`visits`, `leads`).
+- `src/config/funnel.ts`: **all copy**: brand, highlights, A/B variants, qualifying questions, imprint details, email subject/body. Edit this to change content.
+- `pdf/checklist.md` + `pdf/style.css`: source of the lead magnet. `bun run pdf` renders it with headless Chrome via `scripts/render-pdf.ts`. Supports `:::lesson|warning|note|tip Title … :::` callouts, `- [ ]` checklist items and `<div class="page-break"></div>`. Commit the regenerated `private/lead-magnet.pdf` (the emailed file, not publicly served).
+- `src/proxy.ts`: assigns the `vid` (visitor) and `abv` (`experimentId:variantId`) cookies on `/`, **only if `consent=yes`**, and applies HTTP basic auth to `/admin`.
+- Cookie consent: `CookieBanner` (in the layout) → `POST /api/consent` sets `consent` and, on accept, assigns the variant and records the visit. Without consent, visitors see variant A and aren't in the experiment (leads are stored with `experiment_id = NULL`). Footer "Cookie settings" reopens the banner.
+- Qualifying: `/api/leads` returns the lead's `token`; the thank-you step posts the answers to `/api/qualify` (`job_status`, `hustle_stage`). Values are validated against `qualify` in the config.
+- Unsubscribe: every email has a footer link to `/unsubscribe?t=<token>` (confirm button) plus RFC 8058 `List-Unsubscribe` one-click headers → `POST /api/unsubscribe`. GET never unsubscribes (link scanners). Signing up again clears `unsubscribed_at`.
+- `/impressum`, `/privacy`: legal pages from `legal` in the config. The privacy page is a template, so review the hosting/processor details.
+- `src/lib/db.ts`: SQLite at `$DATA_DIR/funnel.sqlite`; schema is created on boot (`visits`, `leads`). New columns are added via the additive `addColumn` migrations; `phone` is kept in the DB/API but removed from the form.
 - `src/app/api/track`: unique view per visitor per experiment (the client fires it on mount).
 - `src/app/api/leads`: validates input, upserts the lead by email, sends via Resend, records `email_status` (`sent` | `failed` | `skipped`). Includes a honeypot field (`hp_x`, deliberately meaningless so autofill skips it) and an in-memory IP rate limit.
-- `src/app/admin`: dashboard (totals, conversion per variant with lift and p-value, leads per day, recent leads) plus `/admin/leads.csv`.
+- `src/app/admin`: dashboard (totals, answered/unsubscribed, conversion per variant with lift and p-value, qualifying-answer breakdowns, leads per day, recent leads) plus `/admin/leads.csv`.
 - `src/app/api/health`: DB ping, used by the Docker `HEALTHCHECK`.
-- Logs are JSON lines on stdout (`lead.created`, `lead.honeypot`).
+- Logs are JSON lines on stdout (`lead.created`, `lead.qualified`, `lead.unsubscribed`, `lead.honeypot`, `lead.rate_limited`).
 
 ## A/B testing
 
@@ -35,7 +40,7 @@ To start a new test, change `experiment.id` and the variants in `src/config/funn
 
 - Build pack: **Dockerfile**. Port **3030**.
 - Persistent storage: mount a volume at **`/app/data`**, or every redeploy wipes the leads.
-- Env: `RESEND_API_KEY`, `EMAIL_FROM` (verified Resend domain), `EMAIL_REPLY_TO` (optional), `ADMIN_PASSWORD`.
+- Env: `RESEND_API_KEY`, `EMAIL_FROM` (verified Resend domain), `EMAIL_REPLY_TO` (optional), `ADMIN_PASSWORD`, `SITE_URL` (optional, e.g. `https://example.com`, used for email links; otherwise derived from proxy headers).
 - Health check path: `/api/health`.
 
 ## Rules

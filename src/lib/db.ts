@@ -39,9 +39,27 @@ function open(): Database {
 
   // Additive migrations for databases created by earlier versions.
   const leadCols = new Set(db.query<{ name: string }, []>("PRAGMA table_info(leads)").all().map((c) => c.name));
-  if (!leadCols.has("name")) db.run("ALTER TABLE leads ADD COLUMN name TEXT");
+  const addColumn = (col: string, type: string) => {
+    if (!leadCols.has(col)) db.run(`ALTER TABLE leads ADD COLUMN ${col} ${type}`);
+  };
+  addColumn("name", "TEXT");
+  // Per-lead secret: used for unsubscribe links and the post-signup qualifying questions.
+  addColumn("token", "TEXT");
+  addColumn("unsubscribed_at", "TEXT");
+  addColumn("job_status", "TEXT");
+  addColumn("hustle_stage", "TEXT");
+  addColumn("qualified_at", "TEXT");
+  db.run("CREATE UNIQUE INDEX IF NOT EXISTS leads_token ON leads (token)");
+  // Backfill tokens for leads created before the column existed.
+  for (const { id } of db.query<{ id: number }, []>("SELECT id FROM leads WHERE token IS NULL").all()) {
+    db.query("UPDATE leads SET token = ? WHERE id = ?").run(newToken(), id);
+  }
 
   return db;
+}
+
+export function newToken(): string {
+  return Buffer.from(crypto.getRandomValues(new Uint8Array(24))).toString("base64url");
 }
 
 export function db(): Database {

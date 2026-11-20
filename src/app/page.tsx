@@ -1,6 +1,7 @@
 import { highlights, site } from "@/config/funnel";
 import { currentVisitor } from "@/lib/visitor";
 import LeadForm from "./LeadForm";
+import SiteFooter from "./SiteFooter";
 
 export const dynamic = "force-dynamic";
 
@@ -43,12 +44,7 @@ export default async function Home() {
         </main>
       </div>
 
-      <footer>
-        <div className="wrap">
-          © {new Date().getFullYear()} {site.brand}. We&apos;ll use your details to send the checklist and
-          occasional emails about starting a side hustle in Germany. Unsubscribe anytime. Not legal or tax advice.
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

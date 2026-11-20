@@ -1,4 +1,4 @@
-import { experiment } from "@/config/funnel";
+import { experiment, qualify } from "@/config/funnel";
 import { db } from "@/lib/db";
 
 export type VariantStats = {
@@ -66,7 +66,8 @@ export function overview() {
   return {
     totalLeads: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads").n,
     leads24h: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE created_at >= datetime('now','-1 day')").n,
-    withPhone: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE phone IS NOT NULL").n,
+    qualified: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE qualified_at IS NOT NULL").n,
+    unsubscribed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE unsubscribed_at IS NOT NULL").n,
     emailFailed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE email_status IN ('failed','skipped')").n,
   };
 }
@@ -91,6 +92,9 @@ export type LeadRow = {
   email: string;
   name: string | null;
   phone: string | null;
+  job_status: string | null;
+  hustle_stage: string | null;
+  unsubscribed_at: string | null;
   experiment_id: string | null;
   variant: string | null;
   request_count: number;
@@ -102,7 +106,8 @@ export type LeadRow = {
 export function recentLeads(limit = 50): LeadRow[] {
   return db()
     .query<LeadRow, [number]>(
-      `SELECT id, email, name, phone, experiment_id, variant, request_count, email_status, email_error, created_at
+      `SELECT id, email, name, phone, job_status, hustle_stage, unsubscribed_at,
+              experiment_id, variant, request_count, email_status, email_error, created_at
        FROM leads ORDER BY id DESC LIMIT ?`,
     )
     .all(limit);
@@ -110,4 +115,34 @@ export function recentLeads(limit = 50): LeadRow[] {
 
 export function allLeads(): LeadRow[] {
   return recentLeads(1_000_000);
+}
+
+export type Breakdown = { question: string; rows: { label: string; n: number }[]; answered: number };
+
+/** Answer counts for each qualifying question, in the order the options are defined. */
+export function qualifyBreakdown(): Breakdown[] {
+  const count = (col: "job_status" | "hustle_stage") =>
+    new Map(
+      db()
+        .query<{ v: string; n: number }, []>(
+          `SELECT ${col} AS v, COUNT(*) AS n FROM leads WHERE ${col} IS NOT NULL GROUP BY ${col}`,
+        )
+        .all()
+        .map((r) => [r.v, r.n]),
+    );
+  return (
+    [
+      [qualify.jobStatus, count("job_status")],
+      [qualify.hustleStage, count("hustle_stage")],
+    ] as const
+  ).map(([q, counts]) => ({
+    question: q.question,
+    rows: q.options.map((o) => ({ label: o.label, n: counts.get(o.value) ?? 0 })),
+    answered: [...counts.values()].reduce((a, b) => a + b, 0),
+  }));
+}
+
+export function labelFor(kind: "jobStatus" | "hustleStage", value: string | null): string {
+  if (!value) return "—";
+  return qualify[kind].options.find((o) => o.value === value)?.label ?? value;
 }

@@ -2,6 +2,9 @@ import { experiment, type Variant } from "@/config/funnel";
 
 export const VISITOR_COOKIE = "vid";
 export const VARIANT_COOKIE = "abv";
+/** "yes" | "no". Strictly necessary (it stores the choice itself), so it's set without consent. */
+export const CONSENT_COOKIE = "consent";
+export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /** Cookie value format: `<experimentId>:<variantId>`. */
 export function parseVariantCookie(value: string | undefined): Variant | null {

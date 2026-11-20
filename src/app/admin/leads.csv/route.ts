@@ -11,7 +11,7 @@ function cell(v: unknown, col: string): string {
 }
 
 export function GET() {
-  const cols = ["id", "created_at", "name", "email", "phone", "experiment_id", "variant", "request_count", "email_status"] as const;
+  const cols = ["id", "created_at", "name", "email", "phone", "job_status", "hustle_stage", "unsubscribed_at", "experiment_id", "variant", "request_count", "email_status"] as const;
   const lines = [cols.join(",")];
   for (const row of allLeads()) lines.push(cols.map((c) => cell(row[c], c)).join(","));
   return new Response(lines.join("\n") + "\n", {

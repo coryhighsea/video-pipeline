@@ -6,7 +6,8 @@
     "dev": "bun --bun next dev -p 3030",
     "build": "bun --bun next build",
     "start": "bun --bun next start -p 3030",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pdf": "bun scripts/render-pdf.ts"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -19,6 +20,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "marked": "18.2.1",
     "typescript": "^7.0.2"
   }
 }

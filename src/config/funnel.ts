@@ -67,6 +67,41 @@ export const experiment: { id: string; variants: Variant[] } = {
   ],
 };
 
+/**
+ * Optional qualifying questions shown on the thank-you screen after signup.
+ * `value` is what's stored in the DB; changing a label is safe, changing a value splits the stats.
+ */
+export const qualify = {
+  jobStatus: {
+    question: "What's your main job right now?",
+    options: [
+      { value: "employed_ft", label: "Employed full-time" },
+      { value: "employed_pt", label: "Employed part-time" },
+      { value: "student", label: "Student" },
+      { value: "self_employed", label: "Already self-employed / freelancing" },
+      { value: "between_jobs", label: "Between jobs" },
+      { value: "other", label: "Other" },
+    ],
+  },
+  hustleStage: {
+    question: "Do you have a side hustle yet?",
+    options: [
+      { value: "exploring", label: "Not yet, just exploring" },
+      { value: "idea", label: "I have an idea" },
+      { value: "started_unregistered", label: "Started, but not registered yet" },
+      { value: "registered", label: "Yes, already registered" },
+    ],
+  },
+} as const;
+
+export const legal = {
+  name: "Cory Hisey",
+  street: "Süntelstr. 44",
+  city: "49088 Osnabrück",
+  country: "Germany",
+  email: "cjhisey@gmail.com",
+};
+
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 

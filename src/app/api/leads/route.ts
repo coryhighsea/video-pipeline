@@ -1,12 +1,14 @@
 import { experiment } from "@/config/funnel";
-import { db } from "@/lib/db";
+import { db, newToken } from "@/lib/db";
 import { sendLeadMagnet } from "@/lib/email";
 import { log } from "@/lib/log";
+import { siteUrl } from "@/lib/url";
 import { currentVisitor } from "@/lib/visitor";
 
 export const dynamic = "force-dynamic";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Phone is no longer on the form but still accepted and stored, for later.
 const PHONE_RE = /^\+?[0-9\s().-]{7,20}$/;
 
 // Simple in-memory rate limit: 10 accepted requests per IP per 10 minutes.
@@ -63,27 +65,29 @@ export async function POST(req: Request) {
   }
   const name = nameRaw || null;
 
-  const { visitorId, variant } = await currentVisitor();
+  const { visitorId, variant, inExperiment } = await currentVisitor();
 
-  // First signup keeps its original variant (that's the conversion we count);
-  // repeat requests just update the phone and resend.
+  // First signup keeps its original variant (that's the conversion we count). Repeat requests
+  // update the details, resend, and re-subscribe (asking again is fresh consent).
+  // Leads from visitors who declined cookies are stored without an experiment id.
   const lead = db()
     .query<
-      { id: number; request_count: number; name: string | null },
-      [string, string | null, string | null, string | null, string, string]
+      { id: number; request_count: number; name: string | null; token: string },
+      [string, string | null, string | null, string | null, string | null, string, string]
     >(
-      `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant, token)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(email) DO UPDATE SET
          name = COALESCE(excluded.name, leads.name),
          phone = COALESCE(excluded.phone, leads.phone),
          request_count = leads.request_count + 1,
+         unsubscribed_at = NULL,
          updated_at = datetime('now')
-       RETURNING id, request_count, name`,
+       RETURNING id, request_count, name, token`,
     )
-    .get(email, name, phone, visitorId, experiment.id, variant.id)!;
+    .get(email, name, phone, visitorId, inExperiment ? experiment.id : null, variant.id, newToken())!;
 
-  const result = await sendLeadMagnet(email, lead.name);
+  const result = await sendLeadMagnet({ to: email, name: lead.name, baseUrl: siteUrl(req), token: lead.token });
   db()
     .query("UPDATE leads SET email_status = ?, email_id = ?, email_error = ? WHERE id = ?")
     .run(
@@ -97,8 +101,8 @@ export async function POST(req: Request) {
     leadId: lead.id,
     repeat: lead.request_count > 1,
     variant: variant.id,
+    inExperiment,
     hasName: Boolean(name),
-    hasPhone: Boolean(phone),
     emailStatus: result.status,
     ...(result.status !== "sent" && { emailError: result.error }),
   });
@@ -109,5 +113,6 @@ export async function POST(req: Request) {
       { status: 502 },
     );
   }
-  return Response.json({ ok: true });
+  // The token lets the thank-you screen save the optional qualifying answers.
+  return Response.json({ ok: true, token: lead.token });
 }

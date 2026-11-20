@@ -1,0 +1,167 @@
+/* Print styles for the lead magnet PDF. Colors match the landing page. */
+:root {
+  --ink: #1b1c1e;
+  --muted: #5d6066;
+  --accent: #1f5f4a;
+  --accent-soft: #e4efe9;
+  --amber: #9a5b00;
+  --amber-soft: #fdf1dc;
+  --blue: #1d4f91;
+  --blue-soft: #e5eef9;
+  --rule: #e3e1da;
+}
+
+@page {
+  size: A4;
+  margin: 20mm 20mm 22mm;
+  @bottom-left {
+    content: "The checklist I wish I had · Cory Hisey";
+    font: 8pt -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #9a9da3;
+  }
+  @bottom-right {
+    content: counter(page);
+    font: 8pt -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #9a9da3;
+  }
+}
+@page :first {
+  @bottom-left { content: none; }
+  @bottom-right { content: none; }
+}
+
+* { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0;
+}
+
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.01em; break-after: avoid; }
+h2 {
+  color: var(--accent);
+  font-size: 17pt;
+  margin: 0 0 4pt;
+  padding-top: 4pt;
+}
+h2 + .kicker { margin-top: 0; }
+h3 { font-size: 12pt; margin: 18pt 0 4pt; color: var(--ink); }
+p { margin: 0 0 9pt; orphans: 3; widows: 3; }
+strong { color: var(--ink); }
+a { color: var(--accent); }
+em { color: var(--muted); }
+hr { border: none; border-top: 1px solid var(--rule); margin: 18pt 0; }
+
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 8pt;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 14pt;
+}
+
+.page-break { break-after: page; }
+
+/* Cover */
+.cover {
+  height: 255mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cover .band {
+  background: linear-gradient(135deg, var(--accent), #123b2e);
+  color: #fff;
+  border-radius: 10pt;
+  padding: 36pt 32pt;
+}
+.cover .eyebrow {
+  font-size: 9pt; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; font-weight: 600;
+}
+.cover h1 { font-size: 30pt; margin: 14pt 0 14pt; color: #fff; }
+.cover .sub { font-size: 13pt; opacity: 0.92; margin: 0; }
+.cover .inside { margin-top: 28pt; }
+.cover .inside h3 { margin-top: 0; color: var(--accent); }
+.cover .inside ul { margin: 0; padding-left: 16pt; }
+.cover .inside li { margin-bottom: 4pt; }
+.cover .byline { color: var(--muted); font-size: 10pt; border-top: 1px solid var(--rule); padding-top: 10pt; }
+
+/* At-a-glance table */
+table { width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.35; margin: 4pt 0 10pt; }
+th {
+  text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); border-bottom: 1.5pt solid var(--accent); padding: 5pt 6pt;
+}
+td { border-bottom: 1px solid var(--rule); padding: 4pt 6pt; vertical-align: top; }
+td:nth-child(4), td:nth-child(5) { white-space: nowrap; }
+tr { break-inside: avoid; }
+td:first-child { width: 18pt; }
+.box {
+  display: inline-block; width: 10pt; height: 10pt;
+  border: 1.2pt solid var(--accent); border-radius: 2pt; vertical-align: -1pt;
+}
+.tag {
+  display: inline-block; font-size: 7.5pt; font-weight: 700; padding: 1pt 5pt; border-radius: 8pt;
+  white-space: nowrap;
+}
+.tag.all { background: var(--accent-soft); color: var(--accent); }
+.tag.ug { background: var(--blue-soft); color: var(--blue); }
+.tag.gew { background: var(--amber-soft); color: var(--amber); }
+.money { color: var(--accent); font-weight: 700; white-space: nowrap; }
+
+/* Summary stat strip */
+.stats { display: flex; gap: 8pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.stats div {
+  flex: 1; background: var(--accent-soft); border-radius: 6pt; padding: 6pt 10pt; line-height: 1.3;
+}
+.stats b { display: block; font-size: 15pt; color: var(--accent); }
+.stats span { font-size: 8.5pt; color: var(--muted); }
+
+/* Callouts */
+.callout {
+  border-left: 3pt solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 6pt 6pt 0;
+  padding: 8pt 12pt 2pt;
+  margin: 10pt 0 14pt;
+  break-inside: avoid;
+}
+.callout-title {
+  font-weight: 700; font-size: 8.5pt; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4pt;
+}
+.callout p { margin-bottom: 6pt; }
+.callout ul { margin: 0 0 6pt; padding-left: 14pt; }
+.callout.warning { border-color: var(--amber); background: var(--amber-soft); }
+.callout.warning .callout-title { color: var(--amber); }
+.callout.note, .callout.tip { border-color: var(--blue); background: var(--blue-soft); }
+.callout.note .callout-title, .callout.tip .callout-title { color: var(--blue); }
+
+/* Checklist items (GFM task lists) */
+ul:has(> li > input[type="checkbox"]) { list-style: none; padding-left: 0; margin: 4pt 0 12pt; }
+li:has(> input[type="checkbox"]) {
+  position: relative; padding: 5pt 8pt 5pt 26pt; margin-bottom: 4pt;
+  border: 1px solid var(--rule); border-radius: 5pt; font-weight: 600; break-inside: avoid;
+}
+li > input[type="checkbox"] {
+  appearance: none; position: absolute; left: 8pt; top: 6.5pt; margin: 0;
+  width: 10pt; height: 10pt; border: 1.2pt solid var(--accent); border-radius: 2pt;
+}
+
+/* Lessons page */
+ol.lessons { padding-left: 0; list-style: none; counter-reset: lesson; }
+ol.lessons > li {
+  counter-increment: lesson; position: relative; padding: 0 0 10pt 30pt; break-inside: avoid;
+}
+ol.lessons > li::before {
+  content: counter(lesson); position: absolute; left: 0; top: 0;
+  width: 20pt; height: 20pt; border-radius: 50%; background: var(--accent); color: #fff;
+  font-weight: 700; font-size: 9.5pt; display: flex; align-items: center; justify-content: center;
+}
+
+.signoff { margin-top: 20pt; }
+.fineprint { font-size: 8pt; color: var(--muted); margin-top: 24pt; border-top: 1px solid var(--rule); padding-top: 8pt; }

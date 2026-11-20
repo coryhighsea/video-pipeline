@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { experiment } from "@/config/funnel";
-import { dailyLeads, experimentStats, overview, recentLeads } from "@/lib/stats";
+import { dailyLeads, experimentStats, labelFor, overview, qualifyBreakdown, recentLeads } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Funnel dashboard", robots: { index: false } };
@@ -13,6 +13,7 @@ export default function Admin() {
   const daily = dailyLeads(30);
   const max = Math.max(1, ...daily.map((d) => d.n));
   const leads = recentLeads(50);
+  const breakdown = qualifyBreakdown();
 
   return (
     <div className="admin">
@@ -24,7 +25,12 @@ export default function Admin() {
       <div className="tiles">
         <Tile label="Total leads" value={o.totalLeads} />
         <Tile label="Last 24 hours" value={o.leads24h} />
-        <Tile label="Gave a phone number" value={o.withPhone} />
+        <Tile
+          label="Answered the questions"
+          value={o.qualified}
+          sub={o.totalLeads ? pct(o.qualified / o.totalLeads) : undefined}
+        />
+        <Tile label="Unsubscribed" value={o.unsubscribed} />
         <Tile label="Emails not delivered" value={o.emailFailed} />
       </div>
 
@@ -61,7 +67,8 @@ export default function Admin() {
         </table>
       </div>
       <p className="meta" style={{ marginTop: 8, fontSize: "0.85rem" }}>
-        Visitors are unique per browser. Wait for at least ~100 leads per variant before calling a winner.
+        Only visitors who accepted cookies are counted (one per browser). Leads from visitors who declined still
+        appear below but aren&apos;t in the test. Wait for at least ~100 leads per variant before calling a winner.
       </p>
 
       <h2>Leads per day (last 30 days)</h2>
@@ -73,6 +80,32 @@ export default function Admin() {
         </div>
       </div>
 
+      <h2>Who&apos;s signing up</h2>
+      <div className="breakdowns">
+        {breakdown.map((b) => (
+          <div className="table-wrap" key={b.question}>
+            <table>
+              <thead>
+                <tr>
+                  <th>{b.question}</th>
+                  <th>Leads</th>
+                  <th>Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {b.rows.map((r) => (
+                  <tr key={r.label}>
+                    <td>{r.label}</td>
+                    <td className="num">{r.n}</td>
+                    <td className="num">{b.answered ? pct(r.n / b.answered) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+
       <h2>Recent leads</h2>
       <div className="table-wrap">
         <table>
@@ -81,7 +114,8 @@ export default function Admin() {
               <th>Signed up (UTC)</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Phone</th>
+              <th>Main job</th>
+              <th>Side hustle</th>
               <th>Variant</th>
               <th>Requests</th>
               <th>Email status</th>
@@ -90,7 +124,7 @@ export default function Admin() {
           <tbody>
             {leads.length === 0 && (
               <tr>
-                <td colSpan={7}>No leads yet.</td>
+                <td colSpan={8}>No leads yet.</td>
               </tr>
             )}
             {leads.map((l) => (
@@ -98,11 +132,13 @@ export default function Admin() {
                 <td>{l.created_at}</td>
                 <td>{l.name ?? "—"}</td>
                 <td>{l.email}</td>
-                <td>{l.phone ?? "—"}</td>
+                <td>{labelFor("jobStatus", l.job_status)}</td>
+                <td>{labelFor("hustleStage", l.hustle_stage)}</td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
                 <td className="num">{l.request_count}</td>
                 <td title={l.email_error ?? undefined}>
                   <span className={l.email_status === "sent" ? "pill" : "pill bad"}>{l.email_status}</span>
+                  {l.unsubscribed_at && <span className="pill bad"> unsubscribed</span>}
                 </td>
               </tr>
             ))}
@@ -113,11 +149,14 @@ export default function Admin() {
   );
 }
 
-function Tile({ label, value }: { label: string; value: number }) {
+function Tile({ label, value, sub }: { label: string; value: number; sub?: string }) {
   return (
     <div className="tile">
       <div className="label">{label}</div>
-      <div className="value">{value}</div>
+      <div className="value">
+        {value}
+        {sub && <span className="sub"> {sub}</span>}
+      </div>
     </div>
   );
 }
