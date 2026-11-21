@@ -3,7 +3,7 @@
 export const site = {
   brand: "Cory Hisey",
   magnetTitle: "The Company Registration Checklist for Germany",
-  magnetFormat: "Free checklist · PDF · in plain English",
+  magnetFormat: "Free 7-page PDF · checklist and guide · in plain English",
   pdfFilename: "Checklist-Starting-Company-in-Germany.pdf",
 };
 
