@@ -44,13 +44,13 @@ Note: the landing page still runs its own A/B test on the headline, so there are
 
 **Pain ad**
 
-- Intro text: "Registering a company in Germany took us 4 months and €606 in fees: notary, Handelsregister, Gewerbeamt, Finanzamt, all in German. I wrote down every step, in order, with what it cost and how long it took. Free checklist, plain English."
+- Intro text: "Registering a company in Germany took us 4 months and €606 in fees: notary, Handelsregister, Gewerbeamt, Finanzamt, all in German. I wrote down every step, in order, with what it cost and how long it took. Free 7-page checklist and guide, in plain English."
 - Headline: "Start your side hustle in Germany without drowning in paperwork"
 - CTA button: **Download**
 
 **Story ad**
 
-- Intro text: "I'm Canadian. When my co-founder and I registered our company in Germany, nobody told us the real order of steps, the real costs, or the VAT decision we should have made first. So I wrote the checklist I wish I'd had."
+- Intro text: "I'm Canadian. When my co-founder and I registered our company in Germany, nobody told us the real order of steps, the real costs, or the VAT decision we should have made first. So I wrote the 7-page checklist and guide I wish I'd had."
 - Headline: "The checklist I wish I had when registering a company in Germany"
 - CTA button: **Download**
 
