@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { site } from "@/config/funnel";
+import { blog, site } from "@/config/funnel";
 import { article, articles, formatDate, renderMarkdown } from "@/lib/blog";
 import SiteFooter from "../../SiteFooter";
 import SiteHeader from "../../SiteHeader";
@@ -57,10 +57,11 @@ export default async function ArticlePage({ params }: Props) {
           {a.draft && <span className="pill muted-pill">draft, hidden in production</span>}
         </p>
         <div className="article-body" dangerouslySetInnerHTML={{ __html: renderMarkdown(a.markdown) }} />
+        <p className="ai-note">{blog.aiNote}</p>
         <SubscribeBox article={a.slug} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       </main>
-      <SiteFooter />
+      <SiteFooter aiNote={false} />
     </>
   );
 }

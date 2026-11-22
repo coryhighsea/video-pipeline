@@ -84,6 +84,9 @@ export const blog = {
   subscribeBody:
     "Occasional emails about starting a side hustle in Germany, from someone doing it. You'll also get my free company registration checklist as a welcome.",
   subscribeCta: "Subscribe",
+  /** Shown at the end of every article. */
+  aiNote:
+    "The experiences, the stories, and the ideas are entirely mine. I use Claude to help organize, edit, and sometimes write what you're reading.",
 };
 
 // Shared across all variants: the "what's inside" descriptions (pain → gap → goal).

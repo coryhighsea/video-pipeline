@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { marked, type Tokens } from "marked";
-import { legal, site } from "@/config/funnel";
+import { blog, legal, site } from "@/config/funnel";
 import { db } from "@/lib/db";
 import { footer, sendEmail, unsubscribeUrls, type SendResult } from "@/lib/email";
 import { log } from "@/lib/log";
@@ -154,6 +154,7 @@ export function renderIssue(
 <div style="max-width:600px;margin:0 auto;padding:24px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1b1c1e">
 ${webUrl ? `<p style="margin:0 0 20px;font-size:13px;color:#777"><a href="${escapeHtml(webUrl)}" style="color:#777">Read this on the blog</a></p>` : ""}
 ${body}
+<p style="margin:28px 0 0;font-size:13px;color:#777;font-style:italic">${escapeHtml(blog.aiNote)}</p>
 ${footer("confirmed", urls.page, opts.baseUrl)}
 </div>
 </body>
@@ -163,6 +164,7 @@ ${footer("confirmed", urls.page, opts.baseUrl)}
   const text = [
     webUrl ? `Read this on the blog: ${webUrl}\n` : "",
     markdownToText(markdown, opts.baseUrl, campaign),
+    `\n${blog.aiNote}`,
     "\n--",
     `You're subscribed to emails from ${host}. Unsubscribe: ${urls.page}`,
     `${legal.name} · ${legal.street} · ${legal.city} · ${legal.country}`,

@@ -238,7 +238,11 @@ label.check small { display: block; color: var(--muted); font-weight: 400; font-
 }
 .article-body .cta-inline strong { color: var(--accent); }
 
-.subscribe { margin-top: 48px; position: static; }
+.ai-note {
+  margin: 40px 0 0; padding-top: 16px; border-top: 1px solid var(--border);
+  color: var(--muted); font-size: 0.9rem; font-style: italic;
+}
+.subscribe { margin-top: 32px; position: static; }
 .subscribe h2 { margin: 0 0 6px; font-size: 1.3rem; }
 .subscribe-body { margin: 0 0 18px; color: var(--muted); }
 .subscribe-form { grid-template-columns: 1fr 1.3fr auto; gap: 10px; }
@@ -313,3 +317,6 @@ label.check small { display: block; color: var(--muted); font-weight: 400; font-
 .project h3 { margin: 0; font-size: 1.05rem; }
 .project p { margin: 0; color: var(--muted); font-size: 0.95rem; flex: 1; }
 .project a { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+
+.footer-text { display: grid; gap: 4px; max-width: 640px; }
+.footer-ai { font-size: 0.8rem; font-style: italic; }
