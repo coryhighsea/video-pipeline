@@ -9,6 +9,7 @@ export default function SiteFooter() {
         </span>
         <nav>
           <a href="/blog">Blog</a>
+          <a href="/about">About</a>
           <a href="/impressum">Impressum</a>
           <a href="/privacy">Privacy</a>
         </nav>

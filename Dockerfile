@@ -24,6 +24,7 @@ ENV NODE_ENV=production \
 
 COPY --from=build --chown=bun:bun /app/.next/standalone ./
 COPY --from=build --chown=bun:bun /app/.next/static ./.next/static
+COPY --from=build --chown=bun:bun /app/public ./public
 COPY --from=build --chown=bun:bun /app/private ./private
 RUN mkdir -p /app/data && chown bun:bun /app/data
 

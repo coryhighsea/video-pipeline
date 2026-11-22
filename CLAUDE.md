@@ -20,7 +20,9 @@ bun run pdf         # pdf/checklist.md → private/lead-magnet.pdf (needs local 
 
 - `src/config/funnel.ts`: **all copy**: brand, highlights, A/B variants, qualifying questions, imprint details, email subject/body. Edit this to change content.
 - `pdf/checklist.md` + `pdf/style.css`: source of the lead magnet. `bun run pdf` renders it with headless Chrome via `scripts/render-pdf.ts`. Supports `:::lesson|warning|note|tip Title … :::` callouts, `- [ ]` checklist items and `<div class="page-break"></div>`. Commit the regenerated `private/lead-magnet.pdf` (the emailed file, not publicly served).
-- `src/proxy.ts`: HTTP basic auth for `/admin`; deletes legacy cookies (`vid`, `abv`, `consent`) from earlier versions. **The site sets no cookies.**
+- Domains: **coryhisey.com is the main domain** (`site.url`, overridable with `SITE_URL`). `site.aliases` (stack-crate.com, www.stack-crate.com, www.coryhisey.com) get a 301 to the same path + query on the main domain in `src/proxy.ts`. `/api/*` is never redirected (one-click unsubscribe POSTs in old emails) and unknown hosts (localhost, the 127.0.0.1 health check, Coolify preview URLs) are left alone. Old portfolio paths (`/shop/*`) redirect to `/about` in `next.config.ts`.
+- `/about`: bio, facts, links and projects from `about` in the config; photo at `public/cory-hisey.jpg` (the Dockerfile copies `public/`).
+- `src/proxy.ts`: alias-domain redirects, HTTP basic auth for `/admin`; deletes legacy cookies (`vid`, `abv`, `consent`) from earlier versions. **The site sets no cookies.**
 - A/B assignment (cookie-free, no banner): `src/lib/experiment.ts` hashes salt + IP (`X-Forwarded-For`) + user agent into a visitor id, then deterministically buckets it by variant weight. The salt is a per-deployment secret auto-created in the `settings` table (`secret("ab_salt")`). Raw IPs are never stored. Trade-off: a changed IP/browser can mean the other variant on a later visit.
 - Qualifying: `/api/leads` returns the lead's `token`; the thank-you step posts the answers to `/api/qualify` (`job_status`, `hustle_stage`). Values are validated against `qualify` in the config.
 - Newsletter (single opt-in, the owner's choice; double opt-in was removed): the form has an unticked "also send me emails" checkbox. Unticked → `newsletter='none'`, PDF only, one-time email. Ticked → `'confirmed'` immediately (`newsletter_requested_at` / `newsletter_confirmed_at` = consent timestamp) and clears any earlier `unsubscribed_at`. Re-requesting without ticking never downgrades a subscription. Legacy `'pending'` rows count as not subscribed. **Only email `newsletter='confirmed' AND unsubscribed_at IS NULL`.**
@@ -44,7 +46,8 @@ To start a new test, change `experiment.id` and the variants in `src/config/funn
 
 - Build pack: **Dockerfile**. Port **3030**.
 - Persistent storage: mount a volume at **`/app/data`**, or every redeploy wipes the leads.
-- Env: `RESEND_API_KEY`, `EMAIL_FROM` (verified Resend domain; `Name <addr>` format OK, surrounding quotes are stripped), `EMAIL_REPLY_TO` (optional), `ADMIN_PASSWORD`, `SITE_URL` (optional, e.g. `https://example.com`, used for email links; otherwise derived from proxy headers).
+- Env: `RESEND_API_KEY`, `EMAIL_FROM` (verified Resend domain; `Name <addr>` format OK, surrounding quotes are stripped), `EMAIL_REPLY_TO` (optional), `ADMIN_PASSWORD`, `SITE_URL` (`https://coryhisey.com`; used for email links, canonical URLs and the sitemap).
+- Domains in Coolify: `https://coryhisey.com,https://www.coryhisey.com,https://stack-crate.com,https://www.stack-crate.com`. The app handles the redirects to coryhisey.com.
 - Health check path: `/api/health`.
 
 ## Rules

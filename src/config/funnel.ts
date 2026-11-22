@@ -5,8 +5,94 @@ export const site = {
   magnetTitle: "The Company Registration Checklist for Germany",
   magnetFormat: "Free 7-page PDF · checklist and guide · in plain English",
   pdfFilename: "Checklist-Starting-Company-in-Germany.pdf",
-  /** Public URL for canonical links, the sitemap and link previews. SITE_URL overrides it. */
-  url: (process.env.SITE_URL ?? "https://stack-crate.com").replace(/\/$/, ""),
+  /** Main public URL: canonical links, the sitemap, link previews. SITE_URL overrides it. */
+  url: (process.env.SITE_URL ?? "https://coryhisey.com").replace(/\/$/, ""),
+  /** Other domains pointed at this app. Pages there 301 to the same path on `url` (see src/proxy.ts). */
+  aliases: ["stack-crate.com", "www.stack-crate.com", "www.coryhisey.com"],
+};
+
+/** /about: who's behind the site, plus the projects from the old coryhisey.com portfolio. */
+export const about = {
+  title: "About",
+  headline: "Hi, I'm Cory.",
+  intro:
+    "I'm a Canadian engineer living in Osnabrück, Germany. I build software, mostly embedded systems and AI tools, and I'm building a company here with my co-founder.",
+  bio: [
+    "My path started with a mechanical engineering degree, followed by a Master's in mechatronics. Since then I've worked mostly as an embedded software developer, with a soft spot for user interfaces and clean, maintainable code.",
+    "My co-founder and I registered a UG and are building NISD2, a compliance platform for the EU's NIS2 cybersecurity directive. Starting a company in Germany as a foreigner taught us a lot, much of it the hard way, so I write it down here and in my newsletter for anyone on the same path.",
+    "Off the clock you'll find me with my spouse and our cats, reading, or travelling.",
+  ],
+  facts: [
+    { label: "Based in", value: "Osnabrück, Germany" },
+    { label: "From", value: "Canada" },
+    { label: "Education", value: "M.Eng Mechatronics" },
+    { label: "Focus", value: "Embedded systems, AI tools, startups" },
+  ],
+  links: [
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/cory-hisey-730a8a59/" },
+    { label: "GitHub", href: "https://github.com/coryhighsea" },
+    { label: "YouTube", href: "https://www.youtube.com/@coryhisey8431" },
+  ],
+  projects: [
+    {
+      title: "NISD2.eu",
+      status: "Active",
+      description:
+        "Compliance platform that helps German SMEs implement the EU NIS2 directive: it walks companies through their legal obligations and generates audit-ready documentation.",
+      href: "https://nisd2.eu",
+      linkText: "Visit site",
+    },
+    {
+      title: "HWSS Universe™ web app",
+      status: "Active",
+      description: "Production web app that hosts written chapters and AI companions, with subscription tiers.",
+      href: "https://hwssuniverse.ca",
+      linkText: "Visit site",
+    },
+    {
+      title: "Heltec LoRa32 Meshtastic",
+      status: "Active",
+      description: "Meshtastic firmware on Heltec LoRa32 boards in 3D-printed enclosures, for long-range off-grid messaging.",
+      href: "https://youtu.be/dKr2ze8ixjE",
+      linkText: "Watch demo",
+    },
+    {
+      title: "Odoo ERP AI agent",
+      status: "Complete",
+      description: "A plugin for Odoo with an AI assistant that connects to an LLM to read from and write to the Odoo PostgreSQL database.",
+      href: "https://github.com/coryhighsea/odoo-erp-ai-agent",
+      linkText: "View code",
+    },
+    {
+      title: "Video pipeline tool",
+      status: "Complete",
+      description:
+        "Upload a Google Meet transcript and recording: an LLM suggests highlight-worthy shorts, filler words are cut and subtitles added, ready to render and download.",
+      href: null,
+      linkText: null,
+    },
+    {
+      title: "Translation validation AI",
+      status: "Complete",
+      description: "A Python tool that uses LLMs to validate and improve translations in real time.",
+      href: "https://www.youtube.com/@coryhisey8431",
+      linkText: "Watch demo",
+    },
+    {
+      title: "Mobile robot simulation",
+      status: "Complete",
+      description: "A mobile drive robot simulated in ROS2 and Gazebo, with path planning and obstacle avoidance.",
+      href: "https://www.youtube.com/watch?v=eMkwDfn32QA",
+      linkText: "Watch demo",
+    },
+    {
+      title: "ESP32 embedded screen UI",
+      status: "Complete",
+      description: "A responsive embedded screen UI on the ESP32, showing real-time sensor data over ESP-NOW.",
+      href: "https://www.youtube.com/@coryhisey8431",
+      linkText: "Watch demo",
+    },
+  ] as { title: string; status: string; description: string; href: string | null; linkText: string | null }[],
 };
 
 /** Blog index and the subscribe box at the end of every article. */

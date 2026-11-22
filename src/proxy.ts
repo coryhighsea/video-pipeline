@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { site } from "@/config/funnel";
 
 /** Cookies set by earlier versions of the site (A/B + consent). The site no longer sets any. */
 const LEGACY_COOKIES = ["vid", "abv", "consent"];
@@ -26,7 +27,27 @@ function adminAuth(req: NextRequest): NextResponse {
   });
 }
 
+const primary = new URL(site.url);
+const aliases = new Set(site.aliases.map((h) => h.toLowerCase()));
+
+/**
+ * Pages requested on an alias domain (stack-crate.com, www.…) permanently redirect to the same path and
+ * query on the main domain, so old links, ads and UTM tags keep working and Google indexes one site.
+ * /api/* is excluded by the matcher: one-click unsubscribe POSTs from old emails must not be redirected.
+ * Unknown hosts (localhost, the 127.0.0.1 health check, Coolify preview URLs) are left alone.
+ */
+function aliasRedirect(req: NextRequest): NextResponse | null {
+  const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "").split(",")[0].trim().toLowerCase().replace(/:\d+$/, "");
+  if (!aliases.has(host) || host === primary.hostname) return null;
+  const target = new URL(req.nextUrl.pathname + req.nextUrl.search, primary);
+  // 301 for normal page views; 308 keeps the method for anything else (e.g. a form POST).
+  return NextResponse.redirect(target, req.method === "GET" || req.method === "HEAD" ? 301 : 308);
+}
+
 export function proxy(req: NextRequest) {
+  const redirect = aliasRedirect(req);
+  if (redirect) return redirect;
+
   if (req.nextUrl.pathname.startsWith("/admin")) return adminAuth(req);
 
   // The site no longer uses cookies; clear any left over from earlier versions.
@@ -38,5 +59,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*"],
+  // Everything except the API and Next's build assets.
+  matcher: ["/((?!api/|_next/).*)"],
 };

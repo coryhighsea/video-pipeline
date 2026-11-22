@@ -8,6 +8,7 @@ export default function SiteHeader() {
       </a>
       <nav>
         <a href="/blog">Blog</a>
+        <a href="/about">About</a>
         <a href="/">Free checklist</a>
       </nav>
     </header>
