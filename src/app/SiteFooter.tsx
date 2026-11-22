@@ -8,6 +8,7 @@ export default function SiteFooter() {
           © {new Date().getFullYear()} {site.brand}. Personal experience, not legal or tax advice.
         </span>
         <nav>
+          <a href="/blog">Blog</a>
           <a href="/impressum">Impressum</a>
           <a href="/privacy">Privacy</a>
         </nav>

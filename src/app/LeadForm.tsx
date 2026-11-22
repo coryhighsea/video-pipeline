@@ -1,23 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { newsletter, qualify } from "@/config/funnel";
+import { newsletter } from "@/config/funnel";
+import { attribution } from "./attribution";
+import QualifyStep from "./QualifyStep";
 
-type Step = "form" | "sending" | "qualify" | "saving" | "done";
-
-/** Where this visit came from: UTM tags in the URL plus the referring page. Nothing is stored on the device. */
-function attribution() {
-  const p = new URLSearchParams(window.location.search);
-  return {
-    ref: document.referrer,
-    utm: {
-      source: p.get("utm_source"),
-      medium: p.get("utm_medium"),
-      campaign: p.get("utm_campaign"),
-      content: p.get("utm_content"),
-    },
-  };
-}
+type Step = "form" | "sending" | "qualify";
 
 export default function LeadForm({ cta }: { cta: string }) {
   const [step, setStep] = useState<Step>("form");
@@ -66,79 +54,7 @@ export default function LeadForm({ cta }: { cta: string }) {
     }
   }
 
-  async function onQualify(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const jobStatus = String(form.get("jobStatus") ?? "");
-    const hustleStage = String(form.get("hustleStage") ?? "");
-    if (!jobStatus && !hustleStage) {
-      setStep("done");
-      return;
-    }
-    setStep("saving");
-    await fetch("/api/qualify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, jobStatus, hustleStage }),
-    }).catch(() => {});
-    setStep("done");
-  }
-
-  if (step === "qualify" || step === "saving") {
-    return (
-      <div className="success" role="status">
-        <h2>Check your inbox ✓</h2>
-        <p>
-          The checklist is on its way to <strong>{sentTo}</strong>.
-        </p>
-        <form onSubmit={onQualify} className="qualify">
-          <p className="qualify-intro">
-            <strong>Two quick questions</strong> so I can send you what&apos;s actually useful (optional):
-          </p>
-          <label>
-            {qualify.jobStatus.question}
-            <select name="jobStatus" defaultValue="">
-              <option value="">Choose one…</option>
-              {qualify.jobStatus.options.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            {qualify.hustleStage.question}
-            <select name="hustleStage" defaultValue="">
-              <option value="">Choose one…</option>
-              {qualify.hustleStage.options.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" disabled={step === "saving"}>
-            {step === "saving" ? "Saving…" : "Send answers"}
-          </button>
-          <button type="button" className="link" onClick={() => setStep("done")}>
-            Skip
-          </button>
-        </form>
-      </div>
-    );
-  }
-
-  if (step === "done") {
-    return (
-      <div className="success" role="status">
-        <h2>Check your inbox</h2>
-        <p>
-          We&apos;ve sent the checklist to <strong>{sentTo}</strong>. It can take a minute to arrive, so check
-          your spam folder if you don&apos;t see it.
-        </p>
-      </div>
-    );
-  }
+  if (step === "qualify") return <QualifyStep token={token} sentTo={sentTo} />;
 
   return (
     <form onSubmit={onSubmit} noValidate>

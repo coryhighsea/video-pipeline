@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 // Phone is no longer on the form but still accepted and stored, for later.
+const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 const PHONE_RE = /^\+?[0-9\s().-]{7,20}$/;
 // Bot check: the form reports how long it was open. Humans take seconds; scripts posting
 // directly to the API send nothing or submit instantly. No hidden field, so autofill can't trip it.
@@ -33,7 +34,17 @@ function rateLimited(ip: string): boolean {
   return false;
 }
 
-type Body = { name?: unknown; email?: unknown; phone?: unknown; subscribe?: unknown; elapsed?: unknown; ref?: unknown; utm?: unknown };
+type Body = {
+  name?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  subscribe?: unknown;
+  elapsed?: unknown;
+  ref?: unknown;
+  utm?: unknown;
+  /** Set by the subscribe box at the end of a blog article: the article's slug. */
+  article?: unknown;
+};
 
 export async function POST(req: Request) {
   try {
@@ -80,7 +91,12 @@ async function handle(req: Request): Promise<Response> {
     return Response.json({ error: "Please enter a shorter name." }, { status: 400 });
   }
   const name = nameRaw || null;
-  const subscribe = body.subscribe === true ? 1 : 0;
+  // Blog signups: the form's only purpose is subscribing (its button says so), and they aren't part of the
+  // landing-page A/B test, so they get no experiment/variant and don't count as conversions there.
+  // (Slug checked by shape only: article files aren't shipped in the runtime image.)
+  const fromArticle = typeof body.article === "string" && SLUG_RE.test(body.article) ? body.article : null;
+  const signupForm = fromArticle ? `blog:${fromArticle}` : "landing";
+  const subscribe = fromArticle || body.subscribe === true ? 1 : 0;
 
   const { visitorId, variant } = await currentVisitor();
   const src = attribution(body, req.headers.get("x-forwarded-host") ?? req.headers.get("host"));
@@ -94,12 +110,12 @@ async function handle(req: Request): Promise<Response> {
       Record<string, string | number | null>
     >(
       `INSERT INTO leads (email, name, phone, visitor_id, experiment_id, variant, token, newsletter,
-                          newsletter_requested_at, newsletter_confirmed_at, source, medium, campaign, content, referrer)
+                          newsletter_requested_at, newsletter_confirmed_at, source, medium, campaign, content, referrer, signup_form)
        VALUES ($email, $name, $phone, $visitor, $experiment, $variant, $token,
                CASE WHEN $sub = 1 THEN 'confirmed' ELSE 'none' END,
                CASE WHEN $sub = 1 THEN datetime('now') END,
                CASE WHEN $sub = 1 THEN datetime('now') END,
-               $source, $medium, $campaign, $content, $referrer)
+               $source, $medium, $campaign, $content, $referrer, $form)
        ON CONFLICT(email) DO UPDATE SET
          name = COALESCE(excluded.name, leads.name),
          phone = COALESCE(excluded.phone, leads.phone),
@@ -120,8 +136,8 @@ async function handle(req: Request): Promise<Response> {
       $name: name,
       $phone: phone,
       $visitor: visitorId,
-      $experiment: experiment.id,
-      $variant: variant.id,
+      $experiment: fromArticle ? null : experiment.id,
+      $variant: fromArticle ? null : variant.id,
       $token: newToken(),
       $sub: subscribe,
       $source: src.source,
@@ -129,6 +145,7 @@ async function handle(req: Request): Promise<Response> {
       $campaign: src.campaign,
       $content: src.content,
       $referrer: src.referrer,
+      $form: signupForm,
     })!;
 
   // What this email should say: active subscriber, or PDF only.
@@ -140,6 +157,7 @@ async function handle(req: Request): Promise<Response> {
     baseUrl: siteUrl(req),
     token: lead.token,
     newsletter: state,
+    welcome: Boolean(fromArticle),
   });
   db()
     .query("UPDATE leads SET email_status = ?, email_id = ?, email_error = ? WHERE id = ?")
@@ -153,7 +171,8 @@ async function handle(req: Request): Promise<Response> {
   log(result.status === "failed" ? "error" : "info", "lead.created", {
     leadId: lead.id,
     repeat: lead.request_count > 1,
-    variant: variant.id,
+    variant: fromArticle ? null : variant.id,
+    form: signupForm,
     source: src.source,
     hasName: Boolean(name),
     newsletter: state,

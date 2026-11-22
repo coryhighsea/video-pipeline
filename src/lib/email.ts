@@ -57,6 +57,8 @@ export async function sendLeadMagnet(opts: {
   baseUrl: string;
   token: string;
   newsletter: NewsletterState;
+  /** Subscribed from the blog: the checklist is framed as a welcome gift. */
+  welcome?: boolean;
 }): Promise<SendResult> {
   const apiKey = envValue("RESEND_API_KEY");
   const from = envValue("EMAIL_FROM");
@@ -72,7 +74,7 @@ export async function sendLeadMagnet(opts: {
       to: opts.to,
       replyTo: envValue("EMAIL_REPLY_TO"),
       subject: email.subject,
-      html: email.html(opts.name) + footer(opts.newsletter, unsubscribeUrl, opts.baseUrl),
+      html: email.html(opts.name, opts.welcome) + footer(opts.newsletter, unsubscribeUrl, opts.baseUrl),
       attachments: [{ filename: site.pdfFilename, content: await pdf() }],
       // RFC 8058 one-click unsubscribe (Gmail/Outlook's native button), only for subscribers.
       // PDF-only recipients aren't on any list.

@@ -6,3 +6,4 @@ data
 .env.*
 .claude
 *.md
+!content/**/*.md

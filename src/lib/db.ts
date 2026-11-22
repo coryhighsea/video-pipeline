@@ -63,6 +63,8 @@ function open(): Database {
   addColumn("newsletter", "TEXT NOT NULL DEFAULT 'none'");
   addColumn("newsletter_requested_at", "TEXT");
   addColumn("newsletter_confirmed_at", "TEXT");
+  // Which form the first signup came from: 'landing' (the checklist page) or 'blog:<slug>'. NULL = landing (older rows).
+  addColumn("signup_form", "TEXT");
   db.run("CREATE UNIQUE INDEX IF NOT EXISTS leads_token ON leads (token)");
   // Backfill tokens for leads created before the column existed.
   for (const { id } of db.query<{ id: number }, []>("SELECT id FROM leads WHERE token IS NULL").all()) {

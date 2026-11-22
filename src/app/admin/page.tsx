@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { experiment } from "@/config/funnel";
 import DeleteLeadButton from "./DeleteLeadButton";
 import {
+  blogSignupStats,
   dailyLeads,
   experimentStats,
   labelFor,
@@ -66,6 +67,7 @@ export default function Admin() {
   const breakdown = qualifyBreakdown();
   const sources = sourceStats();
   const campaigns = sourceStats(true);
+  const blogSignups = blogSignupStats();
 
   return (
     <div className="admin">
@@ -87,6 +89,7 @@ export default function Admin() {
           value={o.subscribers}
           sub={o.totalLeads ? `${pct(o.subscribers / o.totalLeads)} of leads` : undefined}
         />
+        <Tile label="From the blog" value={o.blogSignups} />
         <Tile label="Unsubscribed" value={o.unsubscribed} />
         <Tile label="Emails not delivered" value={o.emailFailed} />
       </div>
@@ -138,6 +141,40 @@ export default function Admin() {
       <h2>Campaigns and ads</h2>
       <SourceTable rows={campaigns} campaigns />
 
+      <h2>Blog signups by article</h2>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Signups</th>
+              <th>Still subscribed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {blogSignups.length === 0 && (
+              <tr>
+                <td colSpan={3}>No blog signups yet.</td>
+              </tr>
+            )}
+            {blogSignups.map((b) => (
+              <tr key={b.article}>
+                <td>
+                  <a className="btn" href={`/blog/${b.article}`}>
+                    {b.article}
+                  </a>
+                </td>
+                <td className="num">{b.leads}</td>
+                <td className="num">{b.subscribers}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="meta" style={{ marginTop: 8, fontSize: "0.85rem" }}>
+        Blog signups aren&apos;t part of the A/B test or the source tables above, which only cover the checklist page.
+      </p>
+
       <h2>Leads per day (last 30 days)</h2>
       <div className="table-wrap">
         <div className="bars" role="img" aria-label="Leads per day over the last 30 days">
@@ -185,6 +222,7 @@ export default function Admin() {
               <th>Side hustle</th>
               <th>Newsletter</th>
               <th>Variant</th>
+              <th>Via</th>
               <th>Source</th>
               <th>Requests</th>
               <th>Email status</th>
@@ -194,7 +232,7 @@ export default function Admin() {
           <tbody>
             {leads.length === 0 && (
               <tr>
-                <td colSpan={11}>No leads yet.</td>
+                <td colSpan={12}>No leads yet.</td>
               </tr>
             )}
             {leads.map((l) => (
@@ -214,6 +252,7 @@ export default function Admin() {
                   )}
                 </td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
+                <td>{l.signup_form?.startsWith("blog:") ? `blog / ${l.signup_form.slice(5)}` : "checklist page"}</td>
                 <td>
                   {l.source ?? "—"}
                   {l.campaign && <span className="meta"> / {l.campaign}</span>}

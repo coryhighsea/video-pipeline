@@ -5,6 +5,18 @@ export const site = {
   magnetTitle: "The Company Registration Checklist for Germany",
   magnetFormat: "Free 7-page PDF · checklist and guide · in plain English",
   pdfFilename: "Checklist-Starting-Company-in-Germany.pdf",
+  /** Public URL for canonical links, the sitemap and link previews. SITE_URL overrides it. */
+  url: (process.env.SITE_URL ?? "https://stack-crate.com").replace(/\/$/, ""),
+};
+
+/** Blog index and the subscribe box at the end of every article. */
+export const blog = {
+  title: "Blog",
+  intro: "Notes from starting a company in Germany as a Canadian: what it cost, what surprised us, and what I'd do differently.",
+  subscribeHeading: "Get the next article by email",
+  subscribeBody:
+    "Occasional emails about starting a side hustle in Germany, from someone doing it. You'll also get my free company registration checklist as a welcome.",
+  subscribeCta: "Subscribe",
 };
 
 // Shared across all variants: the "what's inside" descriptions (pain → gap → goal).
@@ -117,9 +129,14 @@ export const newsletter = {
 
 export const email = {
   subject: "Your checklist: starting a company in Germany",
-  html: (name: string | null) => `
+  /** `welcome`: they subscribed from the blog, and the checklist is a welcome gift. */
+  html: (name: string | null, welcome = false) => `
     <p>Hi ${name ? escapeHtml(name) : "there"},</p>
-    <p>Here's <strong>${site.magnetTitle}</strong>. It's attached to this email.</p>
+    ${
+      welcome
+        ? `<p>Thanks for subscribing! As a welcome, here's <strong>${site.magnetTitle}</strong>. It's attached to this email.</p>`
+        : `<p>Here's <strong>${site.magnetTitle}</strong>. It's attached to this email.</p>`
+    }
     <p>It's every step my co-founder and I went through to register our company here: the notary, the Handelsregister,
     the Finanzamt, the costs, the waiting, and the VAT decision I'd think hard about before you start.</p>
     <p>Got a question about your own setup? Just hit reply.</p>

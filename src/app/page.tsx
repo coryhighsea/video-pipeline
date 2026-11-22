@@ -2,6 +2,7 @@ import { highlights, site } from "@/config/funnel";
 import { currentVisitor } from "@/lib/visitor";
 import LeadForm from "./LeadForm";
 import SiteFooter from "./SiteFooter";
+import SiteHeader from "./SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function Home() {
   return (
     <>
       <div className="wrap">
-        <header className="top">{site.brand}</header>
+        <SiteHeader />
 
         <main className="hero">
           <section>

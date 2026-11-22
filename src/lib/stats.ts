@@ -72,7 +72,19 @@ export function overview() {
       "SELECT COUNT(*) AS n FROM leads WHERE newsletter = 'confirmed' AND unsubscribed_at IS NULL",
     ).n,
     emailFailed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE email_status IN ('failed','skipped')").n,
+    blogSignups: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE signup_form LIKE 'blog:%'").n,
   };
+}
+
+/** Signups from the subscribe box at the end of each article (first signup wins, like the variant). */
+export function blogSignupStats(): { article: string; leads: number; subscribers: number }[] {
+  return db()
+    .query<{ article: string; leads: number; subscribers: number }, []>(
+      `SELECT substr(signup_form, 6) AS article, COUNT(*) AS leads,
+              SUM(newsletter = 'confirmed' AND unsubscribed_at IS NULL) AS subscribers
+       FROM leads WHERE signup_form LIKE 'blog:%' GROUP BY signup_form ORDER BY leads DESC`,
+    )
+    .all();
 }
 
 export type SourceRow = {
@@ -149,6 +161,7 @@ export type LeadRow = {
   variant: string | null;
   source: string | null;
   campaign: string | null;
+  signup_form: string | null;
   request_count: number;
   email_status: string;
   email_error: string | null;
@@ -159,7 +172,7 @@ export function recentLeads(limit = 50): LeadRow[] {
   return db()
     .query<LeadRow, [number]>(
       `SELECT id, email, name, phone, job_status, hustle_stage, unsubscribed_at, newsletter, newsletter_confirmed_at,
-              experiment_id, variant, source, campaign, request_count, email_status, email_error, created_at
+              experiment_id, variant, source, campaign, signup_form, request_count, email_status, email_error, created_at
        FROM leads ORDER BY id DESC LIMIT ?`,
     )
     .all(limit);
