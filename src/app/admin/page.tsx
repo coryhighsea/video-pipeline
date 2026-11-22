@@ -73,7 +73,8 @@ export default function Admin() {
     <div className="admin">
       <h1>Funnel dashboard</h1>
       <p className="meta">
-        Current experiment: <code>{experiment.id}</code> · <a className="btn" href="/admin/leads.csv">Export all leads (CSV)</a>
+        Current experiment: <code>{experiment.id}</code> · <a className="btn" href="/admin/newsletter">Newsletter</a> ·{" "}
+        <a className="btn" href="/admin/leads.csv">Export all leads (CSV)</a>
       </p>
 
       <div className="tiles">

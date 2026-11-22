@@ -71,6 +71,35 @@ function open(): Database {
     db.query("UPDATE leads SET token = ? WHERE id = ?").run(newToken(), id);
   }
 
+  // Newsletter issues and a per-recipient send log (so a resumed send never emails anyone twice).
+  db.run(`
+    CREATE TABLE IF NOT EXISTS newsletters (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      subject       TEXT NOT NULL DEFAULT '',
+      markdown      TEXT NOT NULL DEFAULT '',
+      web_url       TEXT,
+      -- 'draft' | 'sending' | 'sent'
+      status        TEXT NOT NULL DEFAULT 'draft',
+      -- Hash of subject + body + web_url when the last test email went out. Sending needs a match.
+      tested_hash   TEXT,
+      tested_at     TEXT,
+      started_at    TEXT,
+      finished_at   TEXT,
+      created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS newsletter_sends (
+      newsletter_id INTEGER NOT NULL,
+      lead_id       INTEGER NOT NULL,
+      -- 'sent' | 'failed' (failed ones are retried on resume)
+      status        TEXT NOT NULL,
+      email_id      TEXT,
+      error         TEXT,
+      sent_at       TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (newsletter_id, lead_id)
+    );
+  `);
+
   // Small key/value store for per-deployment secrets (e.g. the A/B hashing salt).
   db.run("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
 

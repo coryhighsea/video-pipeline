@@ -17,7 +17,7 @@ export type SendResult =
   | { status: "skipped"; error: string }
   | { status: "failed"; error: string };
 
-function footer(state: NewsletterState, unsubscribeUrl: string, baseUrl: string): string {
+export function footer(state: NewsletterState, unsubscribeUrl: string, baseUrl: string): string {
   const site = baseUrl.replace(/^https?:\/\//, "");
   const note =
     state === "none"
@@ -35,7 +35,7 @@ function footer(state: NewsletterState, unsubscribeUrl: string, baseUrl: string)
  * Env values pasted into hosting dashboards often keep their quotes or stray whitespace
  * (e.g. `"Cory Hisey <me@x.com>"`), which Resend rejects as an invalid sender. Normalise them.
  */
-function envValue(name: string): string | undefined {
+export function envValue(name: string): string | undefined {
   const raw = process.env[name]?.trim();
   if (!raw) return undefined;
   const unquoted = raw.replace(/^(['"])(.*)\1$/s, "$2").trim();
@@ -51,6 +51,47 @@ export function emailConfig() {
   };
 }
 
+/** Unsubscribe URLs for a lead token: the page (confirm button) and the RFC 8058 one-click endpoint. */
+export function unsubscribeUrls(baseUrl: string, token: string) {
+  return { page: `${baseUrl}/unsubscribe?t=${token}`, oneClick: `${baseUrl}/api/unsubscribe?t=${token}` };
+}
+
+/** Low-level send through Resend. `oneClickUnsubscribe` adds the List-Unsubscribe headers (subscribers only). */
+export async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  oneClickUnsubscribe?: string;
+  attachments?: { filename: string; content: Buffer }[];
+}): Promise<SendResult> {
+  const apiKey = envValue("RESEND_API_KEY");
+  const from = envValue("EMAIL_FROM");
+  if (!apiKey || !from) {
+    return { status: "skipped", error: "RESEND_API_KEY or EMAIL_FROM not set" };
+  }
+  try {
+    const resend = new Resend(apiKey);
+    const { data, error } = await resend.emails.send({
+      from,
+      to: opts.to,
+      replyTo: envValue("EMAIL_REPLY_TO"),
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      attachments: opts.attachments,
+      // RFC 8058 one-click unsubscribe (Gmail/Outlook's native button).
+      headers: opts.oneClickUnsubscribe
+        ? { "List-Unsubscribe": `<${opts.oneClickUnsubscribe}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }
+        : undefined,
+    });
+    if (error || !data) return { status: "failed", error: error?.message ?? "No response from Resend" };
+    return { status: "sent", id: data.id };
+  } catch (err) {
+    return { status: "failed", error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 export async function sendLeadMagnet(opts: {
   to: string;
   name: string | null;
@@ -60,32 +101,19 @@ export async function sendLeadMagnet(opts: {
   /** Subscribed from the blog: the checklist is framed as a welcome gift. */
   welcome?: boolean;
 }): Promise<SendResult> {
-  const apiKey = envValue("RESEND_API_KEY");
-  const from = envValue("EMAIL_FROM");
-  if (!apiKey || !from) {
-    return { status: "skipped", error: "RESEND_API_KEY or EMAIL_FROM not set" };
-  }
-  const unsubscribeUrl = `${opts.baseUrl}/unsubscribe?t=${opts.token}`;
-  const oneClickUrl = `${opts.baseUrl}/api/unsubscribe?t=${opts.token}`;
+  const urls = unsubscribeUrls(opts.baseUrl, opts.token);
+  let attachment: Buffer;
   try {
-    const resend = new Resend(apiKey);
-    const { data, error } = await resend.emails.send({
-      from,
-      to: opts.to,
-      replyTo: envValue("EMAIL_REPLY_TO"),
-      subject: email.subject,
-      html: email.html(opts.name, opts.welcome) + footer(opts.newsletter, unsubscribeUrl, opts.baseUrl),
-      attachments: [{ filename: site.pdfFilename, content: await pdf() }],
-      // RFC 8058 one-click unsubscribe (Gmail/Outlook's native button), only for subscribers.
-      // PDF-only recipients aren't on any list.
-      headers:
-        opts.newsletter === "confirmed"
-          ? { "List-Unsubscribe": `<${oneClickUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }
-          : undefined,
-    });
-    if (error || !data) return { status: "failed", error: error?.message ?? "No response from Resend" };
-    return { status: "sent", id: data.id };
+    attachment = await pdf();
   } catch (err) {
     return { status: "failed", error: err instanceof Error ? err.message : String(err) };
   }
+  return sendEmail({
+    to: opts.to,
+    subject: email.subject,
+    html: email.html(opts.name, opts.welcome) + footer(opts.newsletter, urls.page, opts.baseUrl),
+    attachments: [{ filename: site.pdfFilename, content: attachment }],
+    // PDF-only recipients aren't on any list, so no unsubscribe header for them.
+    oneClickUnsubscribe: opts.newsletter === "confirmed" ? urls.oneClick : undefined,
+  });
 }
