@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { blog, site } from "@/config/funnel";
 import { article, articles, formatDate, renderMarkdown } from "@/lib/blog";
 import SiteFooter from "../../SiteFooter";
+import PageView from "../../PageView";
 import SiteHeader from "../../SiteHeader";
 import SubscribeBox from "../SubscribeBox";
 
@@ -59,6 +60,7 @@ export default async function ArticlePage({ params }: Props) {
         <div className="article-body" dangerouslySetInnerHTML={{ __html: renderMarkdown(a.markdown) }} />
         <p className="ai-note">{blog.aiNote}</p>
         <SubscribeBox article={a.slug} />
+        <PageView page={`/blog/${a.slug}`} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       </main>
       <SiteFooter aiNote={false} />

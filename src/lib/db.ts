@@ -100,6 +100,20 @@ function open(): Database {
     );
   `);
 
+  // Blog and /about page views: one row per page, visitor (hashed IP + browser, no cookies) and UTC day.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS page_views (
+      page          TEXT NOT NULL,
+      visitor_id    TEXT NOT NULL,
+      day           TEXT NOT NULL,
+      views         INTEGER NOT NULL DEFAULT 1,
+      source        TEXT,
+      referrer      TEXT,
+      PRIMARY KEY (page, visitor_id, day)
+    );
+    CREATE INDEX IF NOT EXISTS page_views_day ON page_views (day);
+  `);
+
   // Small key/value store for per-deployment secrets (e.g. the A/B hashing salt).
   db.run("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
 

@@ -66,7 +66,8 @@ export default function Privacy() {
           one-way code (a hash). Only that code and the page version you saw are stored; your IP address itself
           isn&apos;t saved. The code can&apos;t be used to identify you or track you across other sites. I also store
           which website sent you here (for example linkedin.com) and any campaign tags in the link you clicked, to
-          see which posts and ads work. Legal basis:
+          see which posts and ads work. The same code is used to count how many people read each blog article
+          and the About page, and where they came from. Legal basis:
           legitimate interest in improving the site (Art. 6(1)(f) GDPR).
         </p>
 

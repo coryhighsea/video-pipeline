@@ -218,3 +218,43 @@ export function labelFor(kind: "jobStatus" | "hustleStage", value: string | null
   if (!value) return "—";
   return qualify[kind].options.find((o) => o.value === value)?.label ?? value;
 }
+
+export type PageViewRow = {
+  page: string;
+  /** Unique visitors, all time (IP + browser hash, so roughly people). */
+  visitors: number;
+  /** All views, including repeat visits and reloads (capped per visitor per day). */
+  views: number;
+  visitors7d: number;
+  /** Subscribe-box signups on this page (first signup wins). */
+  signups: number;
+  /** Top sources by visitors, e.g. "linkedin 12 · google 4". */
+  sources: { source: string; n: number }[];
+};
+
+/** Views of the blog index, each article and /about, most-visited first. */
+export function pageViewStats(): PageViewRow[] {
+  const rows = db()
+    .query<Omit<PageViewRow, "signups" | "sources">, []>(
+      `SELECT page, COUNT(DISTINCT visitor_id) AS visitors, SUM(views) AS views,
+              COUNT(DISTINCT CASE WHEN day >= date('now','-6 days') THEN visitor_id END) AS visitors7d
+       FROM page_views GROUP BY page ORDER BY visitors DESC, page`,
+    )
+    .all();
+  const signups = new Map(boxSignupStats().map((b) => [b.path, b.leads]));
+  const sources = new Map<string, { source: string; n: number }[]>();
+  // A visitor's source is the one from their first day on that page.
+  for (const r of db()
+    .query<{ page: string; source: string; n: number }, []>(
+      `SELECT page, COALESCE(source, 'direct') AS source, COUNT(*) AS n FROM (
+         SELECT page, visitor_id, source, ROW_NUMBER() OVER (PARTITION BY page, visitor_id ORDER BY day) AS rn
+         FROM page_views
+       ) WHERE rn = 1 GROUP BY page, source ORDER BY n DESC`,
+    )
+    .all()) {
+    const list = sources.get(r.page) ?? [];
+    list.push({ source: r.source, n: r.n });
+    sources.set(r.page, list);
+  }
+  return rows.map((r) => ({ ...r, signups: signups.get(r.page) ?? 0, sources: (sources.get(r.page) ?? []).slice(0, 3) }));
+}

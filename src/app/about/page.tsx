@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { about, site } from "@/config/funnel";
 import SubscribeBox from "../blog/SubscribeBox";
+import PageView from "../PageView";
 import SiteFooter from "../SiteFooter";
 import SiteHeader from "../SiteHeader";
 
@@ -92,6 +93,7 @@ export default function About() {
           ))}
         </ul>
         <SubscribeBox page="about" />
+        <PageView page="/about" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       </main>
       <SiteFooter />

@@ -7,6 +7,7 @@ import {
   experimentStats,
   labelFor,
   overview,
+  pageViewStats,
   qualifyBreakdown,
   recentLeads,
   signupFormPath,
@@ -69,6 +70,7 @@ export default function Admin() {
   const sources = sourceStats();
   const campaigns = sourceStats(true);
   const boxSignups = boxSignupStats();
+  const pageViews = pageViewStats();
 
   return (
     <div className="admin">
@@ -142,6 +144,50 @@ export default function Admin() {
 
       <h2>Campaigns and ads</h2>
       <SourceTable rows={campaigns} campaigns />
+
+      <h2>Blog and About page views</h2>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th>Visitors</th>
+              <th>Last 7 days</th>
+              <th>Views</th>
+              <th>Signups</th>
+              <th>Conversion</th>
+              <th>Top sources</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageViews.length === 0 && (
+              <tr>
+                <td colSpan={7}>No blog or About views yet.</td>
+              </tr>
+            )}
+            {pageViews.map((p) => (
+              <tr key={p.page}>
+                <td>
+                  <a className="btn" href={p.page}>
+                    {p.page}
+                  </a>
+                </td>
+                <td className="num">{p.visitors}</td>
+                <td className="num">{p.visitors7d}</td>
+                <td className="num">{p.views}</td>
+                <td className="num">{p.signups}</td>
+                <td className="num">{p.visitors && p.page !== "/blog" ? pct(p.signups / p.visitors) : "—"}</td>
+                <td>{p.sources.map((s) => `${s.source} ${s.n}`).join(" · ") || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="meta" style={{ marginTop: 8, fontSize: "0.85rem" }}>
+        Visitors are counted once per IP + browser (no cookies); views include repeat visits and reloads.
+        &ldquo;internal&rdquo; = clicked through from another page on this site. Signups = the subscribe box on that
+        page.
+      </p>
 
       <h2>Subscribe-box signups by page</h2>
       <div className="table-wrap">

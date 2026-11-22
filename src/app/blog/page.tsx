@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { blog, site } from "@/config/funnel";
 import { articles, formatDate } from "@/lib/blog";
+import PageView from "../PageView";
 import SiteFooter from "../SiteFooter";
 import SiteHeader from "../SiteHeader";
 
@@ -36,6 +37,7 @@ export default function BlogIndex() {
             ))}
           </ul>
           {list.length === 0 && <p className="muted">No articles yet.</p>}
+          <PageView page="/blog" />
         </main>
       </div>
       <SiteFooter />
