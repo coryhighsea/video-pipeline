@@ -72,19 +72,26 @@ export function overview() {
       "SELECT COUNT(*) AS n FROM leads WHERE newsletter = 'confirmed' AND unsubscribed_at IS NULL",
     ).n,
     emailFailed: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE email_status IN ('failed','skipped')").n,
-    blogSignups: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE signup_form LIKE 'blog:%'").n,
+    boxSignups: q<{ n: number }>("SELECT COUNT(*) AS n FROM leads WHERE signup_form LIKE 'blog:%' OR signup_form LIKE 'page:%'").n,
   };
 }
 
-/** Signups from the subscribe box at the end of each article (first signup wins, like the variant). */
-export function blogSignupStats(): { article: string; leads: number; subscribers: number }[] {
+/** Where a non-landing signup came from: "blog:<slug>" → /blog/<slug>, "page:about" → /about. */
+export function signupFormPath(form: string): string {
+  return form.startsWith("blog:") ? `/blog/${form.slice(5)}` : `/${form.slice(5)}`;
+}
+
+/** Signups from the subscribe boxes (articles, /about), per page. First signup wins, like the variant. */
+export function boxSignupStats(): { form: string; path: string; leads: number; subscribers: number }[] {
   return db()
-    .query<{ article: string; leads: number; subscribers: number }, []>(
-      `SELECT substr(signup_form, 6) AS article, COUNT(*) AS leads,
+    .query<{ form: string; leads: number; subscribers: number }, []>(
+      `SELECT signup_form AS form, COUNT(*) AS leads,
               SUM(newsletter = 'confirmed' AND unsubscribed_at IS NULL) AS subscribers
-       FROM leads WHERE signup_form LIKE 'blog:%' GROUP BY signup_form ORDER BY leads DESC`,
+       FROM leads WHERE signup_form LIKE 'blog:%' OR signup_form LIKE 'page:%'
+       GROUP BY signup_form ORDER BY leads DESC`,
     )
-    .all();
+    .all()
+    .map((r) => ({ ...r, path: signupFormPath(r.form) }));
 }
 
 export type SourceRow = {

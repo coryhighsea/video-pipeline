@@ -5,8 +5,11 @@ import { blog } from "@/config/funnel";
 import { attribution } from "../attribution";
 import QualifyStep from "../QualifyStep";
 
-/** Newsletter signup at the end of an article. Submitting it is the opt-in (the button says "Subscribe"). */
-export default function SubscribeBox({ article }: { article: string }) {
+/**
+ * Newsletter signup box (end of every article, bottom of /about). Submitting it is the opt-in (the button
+ * says "Subscribe"). Pass `article` (a blog slug) or `page` (e.g. "about") so /admin shows where signups come from.
+ */
+export default function SubscribeBox({ article, page }: { article?: string; page?: string }) {
   const [step, setStep] = useState<"form" | "sending" | "done">("form");
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState("");
@@ -21,6 +24,7 @@ export default function SubscribeBox({ article }: { article: string }) {
       name: String(form.get("name") ?? ""),
       email: String(form.get("email") ?? ""),
       article,
+      page,
       elapsed: Date.now() - mountedAt.current,
       ...attribution(),
     };

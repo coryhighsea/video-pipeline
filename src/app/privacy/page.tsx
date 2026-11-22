@@ -31,8 +31,8 @@ export default function Privacy() {
           </li>
           <li>
             <strong>Newsletter (only if you sign up for it).</strong> Ticking the box on the checklist page, or
-            subscribing with the form at the end of a blog article, adds you to the list for occasional emails about
-            starting a side hustle in Germany (blog subscribers also get the checklist as a welcome). I store when and
+            subscribing with the form on the blog or About page, adds you to the list for occasional emails about
+            starting a side hustle in Germany (those subscribers also get the checklist as a welcome). I store when and
             where you signed up as a record of your consent. Legal basis: your consent (Art. 6(1)(a) GDPR). Withdraw it
             anytime with the unsubscribe link in every newsletter email.
           </li>

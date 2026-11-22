@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { about, legal, site } from "@/config/funnel";
+import { about, site } from "@/config/funnel";
+import SubscribeBox from "../blog/SubscribeBox";
 import SiteFooter from "../SiteFooter";
 import SiteHeader from "../SiteHeader";
 
@@ -42,9 +43,6 @@ export default function About() {
                   </a>
                 </li>
               ))}
-              <li>
-                <a href={`mailto:${legal.email}`}>Email</a>
-              </li>
             </ul>
           </div>
         </section>
@@ -93,6 +91,7 @@ export default function About() {
             </li>
           ))}
         </ul>
+        <SubscribeBox page="about" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       </main>
       <SiteFooter />

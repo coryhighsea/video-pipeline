@@ -21,12 +21,12 @@ export const about = {
   role: { title: "Research Associate", org: "Osnabrück University of Applied Sciences", orgUrl: "https://www.hs-osnabrueck.de" },
   bio: [
     "I work full-time as a Research Associate at Osnabrück University of Applied Sciences (Hochschule Osnabrück), where I'm also pursuing a PhD. My research is on the compliance of AI and robotics in the agrifood sector: how to develop systems that are safe and compliant from the start, an approach called compliance by design.",
-    "Before that, I studied mechanical engineering and then did a Master's in mechatronics, and I've worked mostly as an embedded software developer.",
+    "Before that, I studied mechanical engineering and then did a Master's in mechatronics, and I've worked as an embedded software developer.",
     "Next to my job, my co-founder and I registered a UG and are building NISD2, a compliance platform for the EU's NIS2 cybersecurity directive. Starting a company in Germany as a foreigner taught us a lot, much of it the hard way, so I write it down here and in my newsletter for anyone on the same path.",
-    "Off the clock you'll find me with my spouse and our cats, reading, or travelling.",
+    "Off the clock you'll find me with my Wife and our cats, reading, or travelling.",
   ],
   facts: [
-    { label: "Role", value: "Research Associate and PhD candidate, Hochschule Osnabrück" },
+    { label: "Role", value: "Research Associate, Hochschule Osnabrück" },
     { label: "Research", value: "Compliance by design for AI and robotics in agrifood" },
     { label: "Based in", value: "Osnabrück, Germany (from Canada)" },
     { label: "Education", value: "M.Eng Mechatronics" },

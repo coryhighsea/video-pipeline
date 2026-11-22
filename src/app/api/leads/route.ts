@@ -44,6 +44,8 @@ type Body = {
   utm?: unknown;
   /** Set by the subscribe box at the end of a blog article: the article's slug. */
   article?: unknown;
+  /** Set by the subscribe box on other pages, e.g. "about". */
+  page?: unknown;
 };
 
 export async function POST(req: Request) {
@@ -91,11 +93,13 @@ async function handle(req: Request): Promise<Response> {
     return Response.json({ error: "Please enter a shorter name." }, { status: 400 });
   }
   const name = nameRaw || null;
-  // Blog signups: the form's only purpose is subscribing (its button says so), and they aren't part of the
-  // landing-page A/B test, so they get no experiment/variant and don't count as conversions there.
-  // (Slug checked by shape only: article files aren't shipped in the runtime image.)
-  const fromArticle = typeof body.article === "string" && SLUG_RE.test(body.article) ? body.article : null;
-  const signupForm = fromArticle ? `blog:${fromArticle}` : "landing";
+  // Subscribe-box signups (blog articles, /about): the form's only purpose is subscribing (its button says so),
+  // and they aren't part of the landing-page A/B test, so they get no experiment/variant.
+  // (Slugs checked by shape only: article files aren't shipped in the runtime image.)
+  const article = typeof body.article === "string" && SLUG_RE.test(body.article) ? body.article : null;
+  const page = typeof body.page === "string" && SLUG_RE.test(body.page) ? body.page : null;
+  const signupForm = article ? `blog:${article}` : page ? `page:${page}` : "landing";
+  const fromArticle = signupForm !== "landing";
   const subscribe = fromArticle || body.subscribe === true ? 1 : 0;
 
   const { visitorId, variant } = await currentVisitor();

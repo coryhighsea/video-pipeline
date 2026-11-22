@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { experiment } from "@/config/funnel";
 import DeleteLeadButton from "./DeleteLeadButton";
 import {
-  blogSignupStats,
+  boxSignupStats,
   dailyLeads,
   experimentStats,
   labelFor,
   overview,
   qualifyBreakdown,
   recentLeads,
+  signupFormPath,
   sourceStats,
   type SourceRow,
 } from "@/lib/stats";
@@ -67,7 +68,7 @@ export default function Admin() {
   const breakdown = qualifyBreakdown();
   const sources = sourceStats();
   const campaigns = sourceStats(true);
-  const blogSignups = blogSignupStats();
+  const boxSignups = boxSignupStats();
 
   return (
     <div className="admin">
@@ -90,7 +91,7 @@ export default function Admin() {
           value={o.subscribers}
           sub={o.totalLeads ? `${pct(o.subscribers / o.totalLeads)} of leads` : undefined}
         />
-        <Tile label="From the blog" value={o.blogSignups} />
+        <Tile label="From blog & about" value={o.boxSignups} />
         <Tile label="Unsubscribed" value={o.unsubscribed} />
         <Tile label="Emails not delivered" value={o.emailFailed} />
       </div>
@@ -142,27 +143,27 @@ export default function Admin() {
       <h2>Campaigns and ads</h2>
       <SourceTable rows={campaigns} campaigns />
 
-      <h2>Blog signups by article</h2>
+      <h2>Subscribe-box signups by page</h2>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Article</th>
+              <th>Page</th>
               <th>Signups</th>
               <th>Still subscribed</th>
             </tr>
           </thead>
           <tbody>
-            {blogSignups.length === 0 && (
+            {boxSignups.length === 0 && (
               <tr>
-                <td colSpan={3}>No blog signups yet.</td>
+                <td colSpan={3}>No subscribe-box signups yet.</td>
               </tr>
             )}
-            {blogSignups.map((b) => (
-              <tr key={b.article}>
+            {boxSignups.map((b) => (
+              <tr key={b.form}>
                 <td>
-                  <a className="btn" href={`/blog/${b.article}`}>
-                    {b.article}
+                  <a className="btn" href={b.path}>
+                    {b.path}
                   </a>
                 </td>
                 <td className="num">{b.leads}</td>
@@ -173,7 +174,8 @@ export default function Admin() {
         </table>
       </div>
       <p className="meta" style={{ marginTop: 8, fontSize: "0.85rem" }}>
-        Blog signups aren&apos;t part of the A/B test or the source tables above, which only cover the checklist page.
+        The subscribe boxes at the end of articles and on /about. These signups aren&apos;t part of the A/B test or
+        the source tables above, which only cover the checklist page.
       </p>
 
       <h2>Leads per day (last 30 days)</h2>
@@ -253,7 +255,7 @@ export default function Admin() {
                   )}
                 </td>
                 <td>{l.variant?.toUpperCase() ?? "—"}</td>
-                <td>{l.signup_form?.startsWith("blog:") ? `blog / ${l.signup_form.slice(5)}` : "checklist page"}</td>
+                <td>{l.signup_form && l.signup_form !== "landing" ? signupFormPath(l.signup_form) : "checklist page"}</td>
                 <td>
                   {l.source ?? "—"}
                   {l.campaign && <span className="meta"> / {l.campaign}</span>}
