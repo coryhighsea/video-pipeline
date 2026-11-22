@@ -17,7 +17,8 @@ export default function About() {
     name: site.brand,
     url: site.url,
     image: `${site.url}/cory-hisey.jpg`,
-    jobTitle: "Software engineer and founder",
+    jobTitle: about.role.title,
+    worksFor: { "@type": "CollegeOrUniversity", name: about.role.org, url: about.role.orgUrl },
     address: { "@type": "PostalAddress", addressLocality: "Osnabrück", addressCountry: "DE" },
     sameAs: about.links.map((l) => l.href),
   };

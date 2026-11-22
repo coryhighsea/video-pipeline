@@ -16,17 +16,20 @@ export const about = {
   title: "About",
   headline: "Hi, I'm Cory.",
   intro:
-    "I'm a Canadian engineer living in Osnabrück, Germany. I build software, mostly embedded systems and AI tools, and I'm building a company here with my co-founder.",
+    "I'm a Canadian engineer living in Osnabrück, Germany. By day I research how to make AI and robotics safe and compliant. On the side, I'm building a company with my co-founder.",
+  /** Current full-time position (also used in the structured data for search engines). */
+  role: { title: "Research Associate", org: "Osnabrück University of Applied Sciences", orgUrl: "https://www.hs-osnabrueck.de" },
   bio: [
-    "My path started with a mechanical engineering degree, followed by a Master's in mechatronics. Since then I've worked mostly as an embedded software developer, with a soft spot for user interfaces and clean, maintainable code.",
-    "My co-founder and I registered a UG and are building NISD2, a compliance platform for the EU's NIS2 cybersecurity directive. Starting a company in Germany as a foreigner taught us a lot, much of it the hard way, so I write it down here and in my newsletter for anyone on the same path.",
+    "I work full-time as a Research Associate at Osnabrück University of Applied Sciences (Hochschule Osnabrück), where I'm also pursuing a PhD. My research is on the compliance of AI and robotics in the agrifood sector: how to develop systems that are safe and compliant from the start, an approach called compliance by design.",
+    "Before that, I studied mechanical engineering and then did a Master's in mechatronics, and I've worked mostly as an embedded software developer.",
+    "Next to my job, my co-founder and I registered a UG and are building NISD2, a compliance platform for the EU's NIS2 cybersecurity directive. Starting a company in Germany as a foreigner taught us a lot, much of it the hard way, so I write it down here and in my newsletter for anyone on the same path.",
     "Off the clock you'll find me with my spouse and our cats, reading, or travelling.",
   ],
   facts: [
-    { label: "Based in", value: "Osnabrück, Germany" },
-    { label: "From", value: "Canada" },
+    { label: "Role", value: "Research Associate and PhD candidate, Hochschule Osnabrück" },
+    { label: "Research", value: "Compliance by design for AI and robotics in agrifood" },
+    { label: "Based in", value: "Osnabrück, Germany (from Canada)" },
     { label: "Education", value: "M.Eng Mechatronics" },
-    { label: "Focus", value: "Embedded systems, AI tools, startups" },
   ],
   links: [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/cory-hisey-730a8a59/" },
@@ -64,32 +67,10 @@ export const about = {
       linkText: "View code",
     },
     {
-      title: "Video pipeline tool",
-      status: "Complete",
-      description:
-        "Upload a Google Meet transcript and recording: an LLM suggests highlight-worthy shorts, filler words are cut and subtitles added, ready to render and download.",
-      href: null,
-      linkText: null,
-    },
-    {
-      title: "Translation validation AI",
-      status: "Complete",
-      description: "A Python tool that uses LLMs to validate and improve translations in real time.",
-      href: "https://www.youtube.com/@coryhisey8431",
-      linkText: "Watch demo",
-    },
-    {
       title: "Mobile robot simulation",
       status: "Complete",
       description: "A mobile drive robot simulated in ROS2 and Gazebo, with path planning and obstacle avoidance.",
       href: "https://www.youtube.com/watch?v=eMkwDfn32QA",
-      linkText: "Watch demo",
-    },
-    {
-      title: "ESP32 embedded screen UI",
-      status: "Complete",
-      description: "A responsive embedded screen UI on the ESP32, showing real-time sensor data over ESP-NOW.",
-      href: "https://www.youtube.com/@coryhisey8431",
       linkText: "Watch demo",
     },
   ] as { title: string; status: string; description: string; href: string | null; linkText: string | null }[],
