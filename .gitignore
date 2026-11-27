@@ -9,3 +9,6 @@ next-env.d.ts
 !.env.example
 .DS_Store
 pdf/build/
+
+# video work (manim animations, renders, thumbnails)
+video/
